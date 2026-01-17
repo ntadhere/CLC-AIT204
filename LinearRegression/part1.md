@@ -1,6 +1,5 @@
 # Linear Regression and Differentiation Essentials
 
-## Part 1
 ### 1. Interpret $\frac{dy}{dx}$ geometrically
 - This is the slope of the tangent line to the curve $y=f(x)$ at a point $x=a$ 
 - It represents the instantaneous rate of change of $y$ with respect to $x$
@@ -241,5 +240,4 @@ $$
 \frac{\partial z}{\partial y} = x e^{x^2 + xy}
 $$
 
-
-## Part 2
+---
