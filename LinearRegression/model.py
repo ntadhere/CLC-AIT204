@@ -92,3 +92,6 @@ class LinearRegression:
     
     def get_history(self):
         return self.history
+    
+    def get_data(self):
+        return self.data
