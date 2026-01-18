@@ -41,6 +41,9 @@ history = m.get_history() #returns {'slope': [],'intercept': [],'grad_slope': []
 st.header("3️⃣ Training Visualizations")
 # TODO: Create plots
 
+# I found that with a learning rate of 0.001 it has a good best fit line
+# Anything bigger that it gets a negative trend line or no line at all.
+
 x = np.array(data["x"]).flatten()
 y = np.array(data["y"]).flatten()
 
@@ -59,6 +62,8 @@ st.header("4️⃣ Make Predictions")
 pred = m.predict(35) #input any singular integer
 st.write(pred)
 
+
+#console printing tests
 print("Metrics")
 print(f"R^2: {metrics["R^2"]}")
 print(f"MSE: {metrics["MSE"]}")
