@@ -2,11 +2,11 @@
 
 ## TOC
 
-- -[Differentiation](#differentiation)-
-- -[The Code](#the-code)-
-    - <[Repository](https://github.com/ntadhere/CLC-AIT204)\>
-    - <[Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)\> 
-- -[Ethical Considerations](#ethical-considerations)-
+- [Differentiation](#differentiation)
+- [The Code](#the-code)
+    - [Repository](https://github.com/ntadhere/CLC-AIT204)
+    - [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)
+- [Ethical Considerations](#ethical-considerations)
 
 ## Differentiation
 
@@ -273,11 +273,11 @@ $$
 
 ## The Code
 
-We made a <[Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)\> that allows the user to view a linear regression model based on a synthetic data set. The user is able to change the learning rate and the number of iterations and then see how those changes affect the model.
+We made a [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/) that allows the user to view a linear regression model based on a synthetic data set. The user is able to change the learning rate and the number of iterations and then see how those changes affect the model.
 
-### <[Code Repository](https://github.com/ntadhere/CLC-AIT204)>
+### [Code Repository](https://github.com/ntadhere/CLC-AIT204)
 
-### <[Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)>
+### [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)
 
 ## Ethical Considerations
 
