@@ -32,9 +32,7 @@ class LinearRegression:
             'grad_slope': [],
             'grad_intercept': [],
             'train_loss': [],      # Track training loss
-            'val_loss': [],        # Track validation loss
-            'grad_magnitude': [],  # Track gradient magnitude
-            'param_change': []     # Track parameter change magnitude
+            'val_loss': []         # Track validation loss
         }
 
         #empty train/test variables
@@ -127,7 +125,6 @@ class LinearRegression:
         """
         Implements gradient descent to train the model
         Tracks both training and validation loss at each iteration
-        Also tracks gradient magnitudes and parameter changes
         """
         X_train = np.array(self.X_train).flatten()
         y_train = np.array(self.y_train).flatten()
@@ -137,10 +134,6 @@ class LinearRegression:
         n = len(X_train)  # number of training samples
 
         for iteration in range(1, self.n_iterations + 1):
-            # Store previous parameters for change tracking
-            prev_slope = self.slope
-            prev_intercept = self.intercept
-            
             # Forward pass: make predictions
             y_pred_train = self.slope * X_train + self.intercept
             
@@ -154,17 +147,10 @@ class LinearRegression:
             # Compute gradients (corrected - using n instead of iteration)
             grad_slope = (1/n) * np.sum((y_pred_train - y_train) * X_train)
             grad_intercept = (1/n) * np.sum(y_pred_train - y_train)
-            
-            # Calculate gradient magnitude (L2 norm)
-            grad_magnitude = np.sqrt(grad_slope**2 + grad_intercept**2)
 
             # Update parameters using gradient descent
             self.slope = self.slope - self.learning_rate * grad_slope
             self.intercept = self.intercept - self.learning_rate * grad_intercept
-            
-            # Calculate parameter change magnitude
-            param_change = np.sqrt((self.slope - prev_slope)**2 + 
-                                  (self.intercept - prev_intercept)**2)
 
             # Track history
             self.history["slope"].append(self.slope)
@@ -173,8 +159,6 @@ class LinearRegression:
             self.history["grad_intercept"].append(grad_intercept)
             self.history["train_loss"].append(train_loss)
             self.history["val_loss"].append(val_loss)
-            self.history["grad_magnitude"].append(grad_magnitude)
-            self.history["param_change"].append(param_change)
         
         return self
 
