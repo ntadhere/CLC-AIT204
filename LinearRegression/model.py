@@ -8,19 +8,31 @@ each function gets called by something in app.py
 '''
 
 class LinearRegression:
-    def __init__(self, learning_rate, n_iterations):
+    def __init__(self, learning_rate, n_iterations, random_seed=None):
         #init variables
         self.learning_rate = learning_rate
         self.n_iterations = n_iterations
-        self.slope = 0
-        self.intercept = 0
+        
+        # Set random seed for reproducibility
+        if random_seed is not None:
+            np.random.seed(random_seed)
+        
+        # Random initialization of parameters
+        # Using small random values from standard normal distribution
+        self.slope = np.random.randn()
+        self.intercept = np.random.randn()
+        
+        # Store initial values for documentation and visualization
+        self.initial_slope = self.slope
+        self.initial_intercept = self.intercept
+        
         self.history = {
             'slope': [],
             'intercept': [],
             'grad_slope': [],
             'grad_intercept': [],
-            'train_loss': [],      # NEW: Track training loss
-            'val_loss': []         # NEW: Track validation loss
+            'train_loss': [],      # Track training loss
+            'val_loss': []         # Track validation loss
         }
 
         #empty train/test variables
@@ -155,3 +167,28 @@ class LinearRegression:
                 'final_val_loss': self.history['val_loss'][-1]
             }
         return None
+    
+    def get_initial_params(self):
+        """
+        Returns the initial parameter values before training
+        """
+        return {
+            'initial_slope': self.initial_slope,
+            'initial_intercept': self.initial_intercept
+        }
+    
+    def predict_with_params(self, X, slope, intercept):
+        """
+        Make predictions using specific parameter values
+        Useful for visualizing initial predictions before training
+        
+        Args:
+            X: input values
+            slope: slope parameter to use
+            intercept: intercept parameter to use
+            
+        Returns:
+            predictions using specified parameters
+        """
+        X = np.array(X).flatten()
+        return slope * X + intercept

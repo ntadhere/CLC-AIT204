@@ -16,17 +16,91 @@ learning_rate = st.sidebar.slider("Learning Rate", 0.0001, 0.1, 0.001, 0.0001,
                                    help="Controls step size in gradient descent")
 n_iterations = st.sidebar.slider("Number of Iterations", 100, 2000, 500, 100,
                                   help="Number of training iterations")
+random_seed = st.sidebar.number_input("Random Seed", min_value=0, max_value=9999, 
+                                       value=42, step=1,
+                                       help="Seed for reproducible random initialization")
 
-m = LinearRegression(learning_rate, n_iterations)
+m = LinearRegression(learning_rate, n_iterations, random_seed=random_seed)
 m.data_split()  # optional parameters: test_size & random_state
 data = m.get_data()
 
+# Get initial parameters before training
+initial_params = m.get_initial_params()
+
 # Display data
 st.header("1️⃣ Synthetic Data")
-st.dataframe(data)
+
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.dataframe(data, use_container_width=True)
+with col2:
+    st.markdown("### Dataset Statistics")
+    st.write(f"**Number of samples:** {len(data)}")
+    st.write(f"**X range:** [{data['x'].min():.2f}, {data['x'].max():.2f}]")
+    st.write(f"**Y range:** [{data['y'].min():.2f}, {data['y'].max():.2f}]")
+    st.write(f"**X mean:** {data['x'].mean():.2f}")
+    st.write(f"**Y mean:** {data['y'].mean():.2f}")
 
 # Train model
 st.header("2️⃣ Model Training")
+
+# Show initial parameters BEFORE training
+st.subheader("Initial Parameters (Before Training)")
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Initial Slope (w₀)", f"{initial_params['initial_slope']:.6f}")
+with col2:
+    st.metric("Initial Intercept (b₀)", f"{initial_params['initial_intercept']:.6f}")
+with col3:
+    st.info(f"Random Seed: {random_seed}")
+
+st.markdown(f"**Initial Equation:** y = {initial_params['initial_intercept']:.4f} + {initial_params['initial_slope']:.4f}x")
+
+# Visualize initial (pre-training) regression line
+st.subheader("Pre-Training Visualization")
+x = np.array(data["x"]).flatten()
+y = np.array(data["y"]).flatten()
+
+fig_initial = go.Figure()
+
+# Add data points
+fig_initial.add_trace(go.Scatter(
+    x=x,
+    y=y,
+    mode="markers",
+    name="Synthetic Data",
+    marker=dict(color='lightblue', size=8, opacity=0.6)
+))
+
+# Add initial regression line (before training)
+y_initial = m.predict_with_params(x, initial_params['initial_slope'], initial_params['initial_intercept'])
+fig_initial.add_trace(go.Scatter(
+    x=x,
+    y=y_initial,
+    mode="lines",
+    name="Initial Line (Pre-Training)",
+    line=dict(color="orange", width=3, dash='dash')
+))
+
+fig_initial.update_layout(
+    title="Initial Regression Line Before Training",
+    xaxis_title="X",
+    yaxis_title="Y",
+    template='plotly_white',
+    hovermode='closest'
+)
+
+st.plotly_chart(fig_initial, use_container_width=True)
+
+st.markdown("""
+**Note:** The orange dashed line shows the initial random regression line before any training. 
+This demonstrates that the model starts with random parameters and learns from the data through gradient descent.
+""")
+
+st.divider()
+
+# Training configuration
+st.subheader("Training Configuration")
 st.write("Learning Rate:", learning_rate)
 st.write("Number of Iterations:", n_iterations)
 
@@ -110,42 +184,62 @@ with tab1:
         st.success("✅ Good generalization: Training and validation losses are similar.")
 
 with tab2:
-    st.subheader("Linear Regression Best Fit Line")
+    st.subheader("Before vs After Training Comparison")
     
-    x = np.array(data["x"]).flatten()
-    y = np.array(data["y"]).flatten()
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
+    fig_comparison = go.Figure()
+    
+    # Add data points
+    fig_comparison.add_trace(go.Scatter(
         x=x,
         y=y,
         mode="markers",
         name="Synthetic Data",
-        marker=dict(color='lightblue', size=8)
+        marker=dict(color='lightblue', size=8, opacity=0.6)
+    ))
+    
+    # Add initial regression line (before training)
+    y_initial = m.predict_with_params(x, initial_params['initial_slope'], initial_params['initial_intercept'])
+    fig_comparison.add_trace(go.Scatter(
+        x=x,
+        y=y_initial,
+        mode="lines",
+        name="Initial Line (Before Training)",
+        line=dict(color="orange", width=2, dash='dash')
     ))
 
-    fig.add_trace(go.Scatter(
+    # Add final regression line (after training)
+    fig_comparison.add_trace(go.Scatter(
         x=x,
         y=m.predict(x),
         mode="lines",
-        name="Best Fit",
+        name="Final Line (After Training)",
         line=dict(color="red", width=3)
     ))
 
-    fig.update_layout(
-        title="Line of Best Fit",
+    fig_comparison.update_layout(
+        title="Regression Line: Before vs After Training",
         xaxis_title="X",
         yaxis_title="Y",
         template='plotly_white'
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_comparison, use_container_width=True)
     
-    # Display learned parameters
-    st.write(f"**Learned Parameters:**")
-    st.write(f"- Slope (w): {m.slope:.4f}")
-    st.write(f"- Intercept (b): {m.intercept:.4f}")
-    st.write(f"- Equation: y = {m.intercept:.4f} + {m.slope:.4f}x")
+    # Display parameter comparison
+    st.markdown("### Parameter Comparison")
+    
+    comparison_df = pd.DataFrame({
+        'Parameter': ['Slope (w)', 'Intercept (b)'],
+        'Initial Value': [initial_params['initial_slope'], initial_params['initial_intercept']],
+        'Final Value': [m.slope, m.intercept],
+        'Change': [m.slope - initial_params['initial_slope'], 
+                   m.intercept - initial_params['initial_intercept']]
+    })
+    
+    st.dataframe(comparison_df, use_container_width=True)
+    
+    st.write(f"**Initial Equation:** y = {initial_params['initial_intercept']:.4f} + {initial_params['initial_slope']:.4f}x")
+    st.write(f"**Final Equation:** y = {m.intercept:.4f} + {m.slope:.4f}x")
 
 with tab3:
     st.subheader("Parameter Evolution During Training")
@@ -202,8 +296,14 @@ st.success(f"Predicted y value: **{pred[0]:.4f}**")
 # Console printing tests
 st.divider()
 with st.expander("📊 View Detailed Training History"):
-    st.write("### Final Iteration Details")
+    st.write("### Initial vs Final Parameters")
+    st.write(f"**Initial Slope (w₀):** {initial_params['initial_slope']:.6f}")
     st.write(f"**Final Slope (w):** {history['slope'][-1]:.6f}")
+    st.write(f"**Slope Change:** {history['slope'][-1] - initial_params['initial_slope']:.6f}")
+    st.write("")
+    st.write(f"**Initial Intercept (b₀):** {initial_params['initial_intercept']:.6f}")
     st.write(f"**Final Intercept (b):** {history['intercept'][-1]:.6f}")
+    st.write(f"**Intercept Change:** {history['intercept'][-1] - initial_params['initial_intercept']:.6f}")
+    st.write("")
     st.write(f"**Final Gradient (Slope):** {history['grad_slope'][-1]:.6f}")
     st.write(f"**Final Gradient (Intercept):** {history['grad_intercept'][-1]:.6f}")
