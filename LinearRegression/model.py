@@ -28,9 +28,15 @@ class LinearRegression:
         self.y_test = []
 
         #initialize data
-        cwd = os.getcwd()
-        data_path = os.path.join(cwd,"LinearRegression\\data\\synthetic_data_Simple_Linear.csv")
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(
+            BASE_DIR,
+            "data",
+            "synthetic_data_Simple_Linear.csv"
+        )
+
         self.data = pd.read_csv(data_path)
+
 
     def data_split(self, test_size=0.2, random_state=42):
         #split data
@@ -43,8 +49,9 @@ class LinearRegression:
 
         for iteration in range(1,self.n_iterations + 1):
             y_pred = self.slope * X + self.intercept
-            grad_slope = (1/iteration) * sum((y_pred - y) * X)
-            grad_intercept = (1/iteration) * sum(y_pred - y)
+            n = len(X)
+            grad_slope = (1/n) * sum((y_pred - y) * X)
+            grad_intercept = (1/n) * sum(y_pred - y)
 
             self.slope = self.slope - self.learning_rate * grad_slope
             self.intercept = self.intercept - self.learning_rate * grad_intercept

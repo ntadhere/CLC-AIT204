@@ -65,18 +65,18 @@ st.write(pred)
 
 #console printing tests
 print("Metrics")
-print(f"R^2: {metrics["R^2"]}")
-print(f"MSE: {metrics["MSE"]}")
-print(f"RMSE: {metrics["RMSE"]}")
-print(f"MAE: {metrics["MAE"]}")
+print(f"R^2: {metrics['R^2']}")
+print(f"MSE: {metrics['MSE']}")
+print(f"RMSE: {metrics['RMSE']}")
+print(f"MAE: {metrics['MAE']}")
 
 print("\n")
 
 print("History")
 for idx in range(len(history["slope"])):
     print("-----------------------------------------------")
-    print(f"Slope (m): {history["slope"][idx]}")
-    print(f"Intercept (b): {history["intercept"][idx]}")
-    print(f"Gradient Slope: {history["grad_slope"][idx]}")
-    print(f"Gradient Intercept: {history["grad_intercept"][idx]}")
-print("-----------------------------------------------")
+    print(f"Slope (m): {history['slope'][idx]}")
+    print(f"Intercept (b): {history['intercept'][idx]}")
+    print(f"Gradient Slope: {history['grad_slope'][idx]}")
+    print(f"Gradient Intercept: {history['grad_intercept'][idx]}")
+    print("-----------------------------------------------")

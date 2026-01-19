@@ -21,34 +21,49 @@ $$
 ### 2. How many differentiation formulas do we have and what are they?
 
 1. Constant Rule: 
+
 $$
 \frac{d}{dx}(c) = 0 
 $$
+
 2. Power Rule:
+
 $$
 \frac{d}{dx}(x^n) = n x^{\,n-1} \quad \text{(real } n \text{, where defined)} 
 $$
+
 3. Constant Multiple Rule: 
+
 $$ 
 \frac{d}{dx}(cf) = c f' 
 $$
+
 4. Sum/Differrence Rule: 
+
 $$
 \frac{d}{dx}(f \pm g) = f' \pm g'
 $$
+
 5. Product Rule: 
+
 $$
 (fg)' = f'g + fg'
 $$
+
 6. Quotient Rule: 
+
 $$
 \frac{d}{dx}\bigl(f(g(x))\bigr) = f'(g(x))\,g'(x)
 $$
+
 7. Chain Rule: 
+
 $$
 \frac{d}{dx}\bigl(f(g(x))\bigr) = f'(g(x))\,g'(x)
 $$
+
 8.  Exponential Rule:
+
 $$
 \frac{d}{dx}(e^x) = e^x
 $$
@@ -56,7 +71,9 @@ $$
 $$
 \frac{d}{dx}(a^x) = a^x \ln a
 $$
+
 9. Logarithmic Rule:
+
 $$
 \frac{d}{dx}(\ln x) = \frac{1}{x}
 $$
@@ -64,7 +81,9 @@ $$
 $$
 \frac{d}{dx}(\log_a x) = \frac{1}{x \ln a}
 $$
+
 10. Trigonometric Fuctions:
+
 $$
 (\sin x)' = \cos x
 $$
