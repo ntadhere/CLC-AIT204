@@ -75,6 +75,51 @@ class LinearRegression:
             float: mean squared error
         """
         return np.mean((y_true - y_pred) ** 2)
+    
+    def calculate_errors(self, y_true, y_pred):
+        """
+        Calculate individual prediction errors (residuals)
+        
+        Error = y_true - y_pred
+        
+        Args:
+            y_true: actual target values
+            y_pred: predicted values
+            
+        Returns:
+            numpy array: individual errors for each prediction
+        """
+        return y_true - y_pred
+    
+    def calculate_mae(self, y_true, y_pred):
+        """
+        Calculate Mean Absolute Error (MAE)
+        
+        MAE = (1/n) * Σ|y_true - y_pred|
+        
+        Args:
+            y_true: actual target values
+            y_pred: predicted values
+            
+        Returns:
+            float: mean absolute error
+        """
+        return np.mean(np.abs(y_true - y_pred))
+    
+    def calculate_rmse(self, y_true, y_pred):
+        """
+        Calculate Root Mean Squared Error (RMSE)
+        
+        RMSE = √(MSE) = √[(1/n) * Σ(y_true - y_pred)²]
+        
+        Args:
+            y_true: actual target values
+            y_pred: predicted values
+            
+        Returns:
+            float: root mean squared error
+        """
+        return np.sqrt(self.calculate_mse(y_true, y_pred))
 
     def fit(self):
         """
@@ -167,6 +212,45 @@ class LinearRegression:
                 'final_val_loss': self.history['val_loss'][-1]
             }
         return None
+    
+    def get_error_statistics(self):
+        """
+        Calculate comprehensive error statistics for training and validation sets
+        
+        Returns:
+            dict: error statistics including MSE, MAE, RMSE, and individual errors
+        """
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        X_val = np.array(self.X_test).flatten()
+        y_val = np.array(self.y_test).flatten()
+        
+        # Generate predictions
+        y_train_pred = self.predict(X_train)
+        y_val_pred = self.predict(X_val)
+        
+        # Calculate errors
+        train_errors = self.calculate_errors(y_train, y_train_pred)
+        val_errors = self.calculate_errors(y_val, y_val_pred)
+        
+        return {
+            'train': {
+                'errors': train_errors,
+                'mse': self.calculate_mse(y_train, y_train_pred),
+                'mae': self.calculate_mae(y_train, y_train_pred),
+                'rmse': self.calculate_rmse(y_train, y_train_pred),
+                'predictions': y_train_pred,
+                'actual': y_train
+            },
+            'validation': {
+                'errors': val_errors,
+                'mse': self.calculate_mse(y_val, y_val_pred),
+                'mae': self.calculate_mae(y_val, y_val_pred),
+                'rmse': self.calculate_rmse(y_val, y_val_pred),
+                'predictions': y_val_pred,
+                'actual': y_val
+            }
+        }
     
     def get_initial_params(self):
         """
