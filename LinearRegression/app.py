@@ -658,21 +658,20 @@ with tab6:
         title="Gradient Magnitude vs Training Loss",
         xaxis_title="Iteration",
         yaxis=dict(
-            title="Gradient Magnitude",
-            titlefont=dict(color='purple'),
-            tickfont=dict(color='purple')
+            title=dict(text="Gradient Magnitude", font=dict(color="purple")),
+            tickfont=dict(color="purple"),
         ),
         yaxis2=dict(
-            title="Training Loss (MSE)",
-            titlefont=dict(color='blue'),
-            tickfont=dict(color='blue'),
-            overlaying='y',
-            side='right'
+            title=dict(text="Training Loss (MSE)", font=dict(color="blue")),
+            tickfont=dict(color="blue"),
+            overlaying="y",
+            side="right",
         ),
-        template='plotly_white',
-        hovermode='x unified',
-        height=400
+        template="plotly_white",
+        hovermode="x unified",
+        height=400,
     )
+
     
     st.plotly_chart(fig_grad_loss, use_container_width=True)
     
