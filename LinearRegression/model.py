@@ -123,6 +123,7 @@ class LinearRegression:
         """
         return np.sqrt(self.calculate_mse(y_true, y_pred))
 
+    #want to rename to fit_grad_descent
     def fit(self):
         """
         Implements gradient descent to train the model
@@ -178,6 +179,15 @@ class LinearRegression:
         
         return self
 
+    def fit_batch(self):
+        pass
+
+    def fit_mini_batch(self):
+        pass
+
+    def fit_stochastic_grad(self):
+        pass
+    
     def predict(self, X):
         #makes predictions
         X = np.array(X).flatten()
