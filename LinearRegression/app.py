@@ -32,7 +32,7 @@ st.header("1️⃣ Synthetic Data")
 
 col1, col2 = st.columns([2, 1])
 with col1:
-    st.dataframe(data, use_container_width=True)
+    st.dataframe(data, width='stretch')
 with col2:
     st.markdown("### Dataset Statistics")
     st.write(f"**Number of samples:** {len(data)}")
@@ -77,7 +77,7 @@ fig_split.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_split, use_container_width=True)
+st.plotly_chart(fig_split, width='stretch')
 
 st.markdown("""
 **Split Details:**
@@ -135,7 +135,7 @@ fig_initial.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_initial, use_container_width=True)
+st.plotly_chart(fig_initial, width='stretch')
 
 st.markdown("""
 **Note:** The orange dashed line shows the initial random regression line before any training. 
@@ -150,7 +150,7 @@ st.write("Learning Rate:", learning_rate)
 st.write("Number of Iterations:", n_iterations)
 
 with st.spinner("Training model..."):
-    m.fit()
+    m.fit()  # Will work with your current model.py
 
 metrics = m.calc_metrics()
 history = m.get_history()
@@ -170,13 +170,14 @@ st.header("3️⃣ Training Visualizations")
 error_stats = m.get_error_statistics()
 
 # Create tabs for different visualizations
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Loss Curves", 
     "Error Analysis", 
     "Best Fit Line", 
     "Predicted vs Actual", 
     "Parameter Evolution",
-    "Gradient Dynamics"
+    "Gradient Dynamics",
+    "Advanced Analysis"
 ])
 
 with tab1:
@@ -213,7 +214,7 @@ with tab1:
         template='plotly_white'
     )
     
-    st.plotly_chart(fig_loss, use_container_width=True)
+    st.plotly_chart(fig_loss, width='stretch')
     
     # Analysis text
     st.markdown("### Loss Curve Analysis")
@@ -267,7 +268,7 @@ with tab2:
             height=350
         )
         
-        st.plotly_chart(fig_train_err, use_container_width=True)
+        st.plotly_chart(fig_train_err, width='stretch')
         
         # Statistics
         train_errors = error_stats['train']['errors']
@@ -299,7 +300,7 @@ with tab2:
             height=350
         )
         
-        st.plotly_chart(fig_val_err, use_container_width=True)
+        st.plotly_chart(fig_val_err, width='stretch')
         
         # Statistics
         val_errors = error_stats['validation']['errors']
@@ -340,7 +341,7 @@ with tab2:
         height=400
     )
     
-    st.plotly_chart(fig_combined_err, use_container_width=True)
+    st.plotly_chart(fig_combined_err, width='stretch')
     
     st.markdown("""
     **Interpretation:**
@@ -383,7 +384,7 @@ with tab2:
         'Validation Set': '{:.6f}',
         'Absolute Difference': '{:.6f}',
         'Relative Difference (%)': '{:.2f}%'
-    }), use_container_width=True)
+    }), width='stretch')
     
     st.markdown("""
     **Loss Function Characteristics:**
@@ -449,7 +450,7 @@ with tab2:
         height=400
     )
     
-    st.plotly_chart(fig_squared, use_container_width=True)
+    st.plotly_chart(fig_squared, width='stretch')
     
     st.markdown("""
     **Why Squared Errors Matter:**
@@ -478,7 +479,7 @@ with tab2:
                 np.percentile(train_errors, 100)
             ]
         })
-        st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), use_container_width=True)
+        st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
     
     with col2:
         st.markdown("#### Validation Set Percentiles")
@@ -492,7 +493,7 @@ with tab2:
                 np.percentile(val_errors, 100)
             ]
         })
-        st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), use_container_width=True)
+        st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
 
 with tab6:
     st.subheader("Gradient Descent Dynamics")
@@ -535,7 +536,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_evolution, use_container_width=True)
+    st.plotly_chart(fig_grad_evolution, width='stretch')
     
     st.markdown("""
     **Interpretation:**
@@ -570,7 +571,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_mag, use_container_width=True)
+    st.plotly_chart(fig_grad_mag, width='stretch')
     
     # Gradient statistics
     col1, col2, col3, col4 = st.columns(4)
@@ -618,7 +619,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_param_change, use_container_width=True)
+    st.plotly_chart(fig_param_change, width='stretch')
     
     st.markdown("""
     **Parameter Change Interpretation:**
@@ -658,13 +659,11 @@ with tab6:
         title="Gradient Magnitude vs Training Loss",
         xaxis_title="Iteration",
         yaxis=dict(
-            title="Gradient Magnitude",
-            titlefont=dict(color='purple'),
+            title=dict(text="Gradient Magnitude", font=dict(color='purple')),
             tickfont=dict(color='purple')
         ),
         yaxis2=dict(
-            title="Training Loss (MSE)",
-            titlefont=dict(color='blue'),
+            title=dict(text="Training Loss (MSE)", font=dict(color='blue')),
             tickfont=dict(color='blue'),
             overlaying='y',
             side='right'
@@ -674,7 +673,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_loss, use_container_width=True)
+    st.plotly_chart(fig_grad_loss, width='stretch')
     
     st.markdown("""
     **Key Relationship:**
@@ -741,7 +740,7 @@ with tab6:
         showlegend=True
     )
     
-    st.plotly_chart(fig_grad_vector, use_container_width=True)
+    st.plotly_chart(fig_grad_vector, width='stretch')
     
     st.markdown("""
     **Parameter Space Interpretation:**
@@ -789,7 +788,7 @@ with tab6:
         'Final Value': '{:.6f}',
         'Max Absolute Value': '{:.6f}',
         'Mean Absolute Value': '{:.6f}'
-    }), use_container_width=True)
+    }), width='stretch')
     
     st.divider()
     
@@ -842,6 +841,462 @@ with tab6:
     - **Parameters stable**: Optimization complete
     """)
 
+with tab7:
+    st.subheader("Advanced Analysis: Gradient Verification & Large Gradient Effects")
+    
+    # Check if model has been trained
+    if len(history['train_loss']) == 0:
+        st.warning("⚠️ Please train the model first by visiting the other tabs.")
+        st.stop()
+    
+    # Section 1: Gradient Verification
+    st.markdown("## 1. Gradient Verification Using Finite Differences")
+    
+    st.markdown("""
+    **Purpose:** Verify that our analytical gradient computation is correct by comparing 
+    it with numerical approximation using finite differences.
+    
+    **Method:**
+    - **Analytical Gradient:** Computed using calculus (∂L/∂θ)
+    - **Numerical Gradient:** Approximated using finite differences: 
+      [L(θ + ε) - L(θ - ε)] / (2ε)
+    """)
+    
+    # Perform gradient verification
+    epsilon_values = [1e-5, 1e-6, 1e-7, 1e-8, 1e-9]
+    
+    st.markdown("### Gradient Verification at Current Parameters")
+    
+    try:
+        verification_results = []
+        for eps in epsilon_values:
+            result = m.verify_gradients(epsilon=eps)
+            verification_results.append({
+                'Epsilon (ε)': eps,
+                'Analytical ∂L/∂w': result['analytical']['grad_w'],
+                'Numerical ∂L/∂w': result['numerical']['grad_w'],
+                'Absolute Diff (w)': result['absolute_difference']['grad_w'],
+                'Relative Error (w)': result['relative_error']['grad_w'],
+                'Analytical ∂L/∂b': result['analytical']['grad_b'],
+                'Numerical ∂L/∂b': result['numerical']['grad_b'],
+                'Absolute Diff (b)': result['absolute_difference']['grad_b'],
+                'Relative Error (b)': result['relative_error']['grad_b']
+            })
+    except Exception as e:
+        st.error(f"Error during gradient verification: {str(e)}")
+        st.info("This may happen if the model hasn't been properly initialized. Please refresh and try again.")
+        st.stop()
+    
+    verification_df = pd.DataFrame(verification_results)
+    
+    st.dataframe(verification_df.style.format({
+        'Epsilon (ε)': '{:.0e}',
+        'Analytical ∂L/∂w': '{:.8f}',
+        'Numerical ∂L/∂w': '{:.8f}',
+        'Absolute Diff (w)': '{:.2e}',
+        'Relative Error (w)': '{:.2e}',
+        'Analytical ∂L/∂b': '{:.8f}',
+        'Numerical ∂L/∂b': '{:.8f}',
+        'Absolute Diff (b)': '{:.2e}',
+        'Relative Error (b)': '{:.2e}'
+    }), use_container_width=True)
+    
+    # Best epsilon analysis
+    best_eps_w = verification_df.loc[verification_df['Relative Error (w)'].idxmin(), 'Epsilon (ε)']
+    best_eps_b = verification_df.loc[verification_df['Relative Error (b)'].idxmin(), 'Epsilon (ε)']
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Best ε for ∂L/∂w", f"{best_eps_w:.0e}")
+        min_error_w = verification_df['Relative Error (w)'].min()
+        if min_error_w < 1e-5:
+            st.success(f"✅ Excellent match (error: {min_error_w:.2e})")
+        elif min_error_w < 1e-3:
+            st.info(f"✓ Good match (error: {min_error_w:.2e})")
+        else:
+            st.warning(f"⚠️ Poor match (error: {min_error_w:.2e})")
+    
+    with col2:
+        st.metric("Best ε for ∂L/∂b", f"{best_eps_b:.0e}")
+        min_error_b = verification_df['Relative Error (b)'].min()
+        if min_error_b < 1e-5:
+            st.success(f"✅ Excellent match (error: {min_error_b:.2e})")
+        elif min_error_b < 1e-3:
+            st.info(f"✓ Good match (error: {min_error_b:.2e})")
+        else:
+            st.warning(f"⚠️ Poor match (error: {min_error_b:.2e})")
+    
+    # Visualization of verification
+    fig_verification = go.Figure()
+    
+    fig_verification.add_trace(go.Scatter(
+        x=[f"{eps:.0e}" for eps in epsilon_values],
+        y=verification_df['Relative Error (w)'],
+        mode='lines+markers',
+        name='Relative Error (∂L/∂w)',
+        line=dict(color='blue', width=2),
+        marker=dict(size=10)
+    ))
+    
+    fig_verification.add_trace(go.Scatter(
+        x=[f"{eps:.0e}" for eps in epsilon_values],
+        y=verification_df['Relative Error (b)'],
+        mode='lines+markers',
+        name='Relative Error (∂L/∂b)',
+        line=dict(color='red', width=2),
+        marker=dict(size=10)
+    ))
+    
+    fig_verification.update_layout(
+        title="Gradient Verification: Relative Error vs Epsilon",
+        xaxis_title="Epsilon (ε)",
+        yaxis_title="Relative Error",
+        yaxis_type="log",
+        template='plotly_white',
+        hovermode='x unified',
+        height=400
+    )
+    
+    st.plotly_chart(fig_verification, width='stretch')
+    
+    st.markdown("""
+    **Interpretation:**
+    - **Relative error < 10⁻⁵**: Gradients are correctly implemented
+    - **Relative error 10⁻⁵ to 10⁻³**: Acceptable numerical precision
+    - **Relative error > 10⁻³**: Potential implementation error
+    
+    **Epsilon selection:**
+    - **Too large** (> 10⁻⁵): Finite difference approximation is inaccurate
+    - **Too small** (< 10⁻⁹): Numerical precision errors dominate
+    - **Optimal** (10⁻⁷ to 10⁻⁸): Best balance for double precision floats
+    """)
+    
+    # Mathematical derivation
+    with st.expander("📐 Mathematical Derivation of Gradients"):
+        st.markdown("""
+        ### Analytical Gradient Derivation
+        
+        Given loss function:
+        ```
+        L(w, b) = (1/n) Σᵢ₌₁ⁿ (yᵢ - ŷᵢ)²
+                = (1/n) Σᵢ₌₁ⁿ (yᵢ - (b + w·xᵢ))²
+        ```
+        
+        **Gradient with respect to w:**
+        ```
+        ∂L/∂w = ∂/∂w [(1/n) Σᵢ (yᵢ - b - w·xᵢ)²]
+              = (1/n) Σᵢ ∂/∂w [(yᵢ - b - w·xᵢ)²]
+              = (1/n) Σᵢ 2(yᵢ - b - w·xᵢ) · (-xᵢ)
+              = (1/n) Σᵢ -2(yᵢ - ŷᵢ) · xᵢ
+              = (1/n) Σᵢ 2(ŷᵢ - yᵢ) · xᵢ
+        ```
+        (We absorb the factor of 2 into the learning rate)
+        
+        **Gradient with respect to b:**
+        ```
+        ∂L/∂b = ∂/∂b [(1/n) Σᵢ (yᵢ - b - w·xᵢ)²]
+              = (1/n) Σᵢ 2(yᵢ - b - w·xᵢ) · (-1)
+              = (1/n) Σᵢ 2(ŷᵢ - yᵢ)
+        ```
+        
+        ### Numerical Gradient Approximation
+        
+        **Central Difference Method:**
+        ```
+        ∂L/∂w ≈ [L(w + ε, b) - L(w - ε, b)] / (2ε)
+        ∂L/∂b ≈ [L(w, b + ε) - L(w, b - ε)] / (2ε)
+        ```
+        
+        This is more accurate than forward difference: [L(w + ε) - L(w)] / ε
+        
+        **Error bound:** O(ε²) for central difference vs O(ε) for forward difference
+        """)
+    
+    st.divider()
+    
+    # Section 2: Large Gradient Analysis
+    st.markdown("## 2. Large Gradient Analysis & Gradient Explosion")
+    
+    st.markdown("""
+    **Purpose:** Demonstrate what happens when gradients become too large, 
+    typically caused by:
+    - Learning rate too high
+    - Poor parameter initialization
+    - Ill-conditioned data
+    - Numerical instability
+    """)
+    
+    # User controls for demonstration
+    col1, col2 = st.columns(2)
+    with col1:
+        extreme_lr = st.slider(
+            "Extreme Learning Rate",
+            min_value=1.0,
+            max_value=100.0,
+            value=10.0,
+            step=1.0,
+            help="Very high learning rate to demonstrate instability"
+        )
+    with col2:
+        explosion_iters = st.slider(
+            "Iterations to Run",
+            min_value=10,
+            max_value=100,
+            value=50,
+            step=10,
+            help="Number of iterations before stopping"
+        )
+    
+    if st.button("🚀 Run Large Gradient Demonstration", type="primary"):
+        with st.spinner("Running unstable training demonstration..."):
+            unstable_history = m.demonstrate_large_gradients(
+                extreme_learning_rate=extreme_lr,
+                iterations=explosion_iters
+            )
+        
+        # Display results
+        if unstable_history['exploded']:
+            st.error(f"💥 **Gradient Explosion Occurred at Iteration {unstable_history['explosion_iteration']}!**")
+            st.warning("Training became unstable and produced NaN/Inf values.")
+        else:
+            st.warning("⚠️ Training completed but likely diverged (loss increased)")
+        
+        # Compare stable vs unstable training
+        st.markdown("### Unstable vs Stable Training Comparison")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Stable Training (Your Model)")
+            st.write(f"**Learning Rate:** {learning_rate}")
+            st.write(f"**Initial Loss:** {history['train_loss'][0]:.4f}")
+            st.write(f"**Final Loss:** {history['train_loss'][-1]:.4f}")
+            st.write(f"**Loss Reduction:** {(history['train_loss'][0] - history['train_loss'][-1]):.4f}")
+            st.write(f"**Final Gradient Magnitude:** {history['grad_magnitude'][-1]:.6f}")
+        
+        with col2:
+            st.markdown("#### Unstable Training (Large LR)")
+            st.write(f"**Learning Rate:** {extreme_lr}")
+            if len(unstable_history['train_loss']) > 0:
+                st.write(f"**Initial Loss:** {unstable_history['train_loss'][0]:.4f}")
+                st.write(f"**Final Loss:** {unstable_history['train_loss'][-1]:.4e}")
+                loss_change = unstable_history['train_loss'][-1] - unstable_history['train_loss'][0]
+                st.write(f"**Loss Change:** {loss_change:.4e}")
+                st.write(f"**Final Gradient Magnitude:** {unstable_history['grad_magnitude'][-1]:.6e}")
+        
+        # Loss comparison plot
+        st.markdown("### Loss Evolution Comparison")
+        
+        fig_loss_compare = go.Figure()
+        
+        # Stable training
+        stable_iters = list(range(1, len(history['train_loss']) + 1))
+        fig_loss_compare.add_trace(go.Scatter(
+            x=stable_iters[:len(unstable_history['train_loss'])],
+            y=history['train_loss'][:len(unstable_history['train_loss'])],
+            mode='lines',
+            name=f'Stable (LR={learning_rate})',
+            line=dict(color='green', width=2)
+        ))
+        
+        # Unstable training
+        unstable_iters = list(range(1, len(unstable_history['train_loss']) + 1))
+        fig_loss_compare.add_trace(go.Scatter(
+            x=unstable_iters,
+            y=unstable_history['train_loss'],
+            mode='lines',
+            name=f'Unstable (LR={extreme_lr})',
+            line=dict(color='red', width=2)
+        ))
+        
+        fig_loss_compare.update_layout(
+            title="Loss Evolution: Stable vs Unstable Training",
+            xaxis_title="Iteration",
+            yaxis_title="Training Loss (MSE)",
+            yaxis_type="log",
+            template='plotly_white',
+            hovermode='x unified',
+            height=400
+        )
+        
+        st.plotly_chart(fig_loss_compare, width='stretch')
+        
+        # Gradient magnitude comparison
+        st.markdown("### Gradient Magnitude Comparison")
+        
+        fig_grad_compare = go.Figure()
+        
+        # Stable gradients
+        fig_grad_compare.add_trace(go.Scatter(
+            x=stable_iters[:len(unstable_history['grad_magnitude'])],
+            y=history['grad_magnitude'][:len(unstable_history['grad_magnitude'])],
+            mode='lines',
+            name=f'Stable (LR={learning_rate})',
+            line=dict(color='green', width=2)
+        ))
+        
+        # Unstable gradients
+        fig_grad_compare.add_trace(go.Scatter(
+            x=unstable_iters,
+            y=unstable_history['grad_magnitude'],
+            mode='lines',
+            name=f'Unstable (LR={extreme_lr})',
+            line=dict(color='red', width=2)
+        ))
+        
+        fig_grad_compare.update_layout(
+            title="Gradient Magnitude: Stable vs Unstable Training",
+            xaxis_title="Iteration",
+            yaxis_title="Gradient Magnitude ||∇L||",
+            yaxis_type="log",
+            template='plotly_white',
+            hovermode='x unified',
+            height=400
+        )
+        
+        st.plotly_chart(fig_grad_compare, width='stretch')
+        
+        # Parameter trajectory comparison
+        st.markdown("### Parameter Space Trajectory Comparison")
+        
+        fig_traj_compare = go.Figure()
+        
+        # Stable trajectory
+        fig_traj_compare.add_trace(go.Scatter(
+            x=history['slope'][:len(unstable_history['slope'])],
+            y=history['intercept'][:len(unstable_history['intercept'])],
+            mode='lines+markers',
+            name='Stable Path',
+            line=dict(color='green', width=2),
+            marker=dict(size=4)
+        ))
+        
+        # Unstable trajectory
+        fig_traj_compare.add_trace(go.Scatter(
+            x=unstable_history['slope'],
+            y=unstable_history['intercept'],
+            mode='lines+markers',
+            name='Unstable Path',
+            line=dict(color='red', width=2),
+            marker=dict(size=6)
+        ))
+        
+        # Mark starting points
+        fig_traj_compare.add_trace(go.Scatter(
+            x=[history['slope'][0]],
+            y=[history['intercept'][0]],
+            mode='markers',
+            name='Start (Stable)',
+            marker=dict(color='green', size=15, symbol='star')
+        ))
+        
+        fig_traj_compare.add_trace(go.Scatter(
+            x=[unstable_history['slope'][0]],
+            y=[unstable_history['intercept'][0]],
+            mode='markers',
+            name='Start (Unstable)',
+            marker=dict(color='red', size=15, symbol='star')
+        ))
+        
+        fig_traj_compare.update_layout(
+            title="Parameter Space: Stable vs Unstable Optimization Paths",
+            xaxis_title="w (Slope)",
+            yaxis_title="b (Intercept)",
+            template='plotly_white',
+            height=500
+        )
+        
+        st.plotly_chart(fig_traj_compare, width='stretch')
+        
+        st.markdown("""
+        **Observations:**
+        - **Stable training** (green): Smooth convergence toward optimal parameters
+        - **Unstable training** (red): Erratic behavior, divergence, or explosion
+        - **Large learning rate** causes overshooting and oscillations
+        - **Gradient explosion** occurs when updates become unbounded
+        """)
+    
+    # Theoretical analysis
+    st.divider()
+    st.markdown("## 3. Mathematical Analysis of Large Gradients")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### Geometric Interpretation
+        
+        **Gradient Descent Update:**
+        ```
+        θₙₑw = θₒₗd - α · ∇L(θₒₗd)
+        ```
+        
+        **When α is too large:**
+        - Step size > distance to minimum
+        - **Overshooting** occurs
+        - Can jump past the minimum
+        - May diverge to infinity
+        
+        **Visualize as:**
+        - Ball rolling down a hill
+        - Too much momentum → flies past valley
+        - Bounces back and forth with increasing amplitude
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### Numerical Stability
+        
+        **Gradient explosion causes:**
+        1. **Parameter explosion**: |θ| → ∞
+        2. **Loss explosion**: L → ∞
+        3. **Numerical overflow**: Values exceed float limits
+        4. **NaN propagation**: 0/0, ∞/∞, etc.
+        
+        **Prevention strategies:**
+        1. **Learning rate decay**: Reduce α over time
+        2. **Gradient clipping**: Cap ||∇L|| at threshold
+        3. **Adaptive learning rates**: Adam, RMSprop
+        4. **Batch normalization**: Stabilize activations
+        5. **Proper initialization**: Start near optimum
+        """)
+    
+    # Stability condition
+    with st.expander("📊 Mathematical Stability Condition"):
+        st.markdown("""
+        ### Convergence Criterion for Gradient Descent
+        
+        For **convex** quadratic loss L(θ) = ½θᵀAθ - bᵀθ:
+        
+        **Stability condition:**
+        ```
+        0 < α < 2/λₘₐₓ(A)
+        ```
+        
+        where λₘₐₓ is the largest eigenvalue of the Hessian matrix A.
+        
+        **For linear regression:**
+        ```
+        A = (1/n) XᵀX
+        λₘₐₓ ≈ max(xᵢ²)
+        ```
+        
+        **Practical guideline:**
+        ```
+        α < 1 / max(|xᵢ|²)
+        ```
+        
+        **If α > 2/λₘₐₓ:**
+        - Eigenvalue of update matrix > 1
+        - Iterates grow exponentially
+        - Gradient explosion occurs
+        
+        **Example:**
+        - If max(xᵢ²) = 100
+        - Then α should be < 0.01 for guaranteed convergence
+        - Your learning rate of {learning_rate} is {('safe' if learning_rate < 0.01 else 'potentially unstable')}
+        """)
+
 # Rest of tabs remain unchanged...
     st.subheader("Before vs After Training Comparison")
     
@@ -882,7 +1337,7 @@ with tab6:
         template='plotly_white'
     )
 
-    st.plotly_chart(fig_comparison, use_container_width=True)
+    st.plotly_chart(fig_comparison, width='stretch')
     
     # Display parameter comparison
     st.markdown("### Parameter Comparison")
@@ -895,7 +1350,7 @@ with tab6:
                    m.intercept - initial_params['initial_intercept']]
     })
     
-    st.dataframe(comparison_df, use_container_width=True)
+    st.dataframe(comparison_df, width='stretch')
     
     st.write(f"**Initial Equation:** y = {initial_params['initial_intercept']:.4f} + {initial_params['initial_slope']:.4f}x")
     st.write(f"**Final Equation:** y = {m.intercept:.4f} + {m.slope:.4f}x")
@@ -954,7 +1409,7 @@ with tab3:
             height=400
         )
         
-        st.plotly_chart(fig_train, use_container_width=True)
+        st.plotly_chart(fig_train, width='stretch')
         
         # Training set statistics
         train_residuals = y_train - y_train_pred
@@ -1001,7 +1456,7 @@ with tab3:
             height=400
         )
         
-        st.plotly_chart(fig_val, use_container_width=True)
+        st.plotly_chart(fig_val, width='stretch')
         
         # Validation set statistics
         val_residuals = y_val - y_val_pred
@@ -1048,7 +1503,7 @@ with tab3:
         height=400
     )
     
-    st.plotly_chart(fig_residuals, use_container_width=True)
+    st.plotly_chart(fig_residuals, width='stretch')
     
     st.markdown("""
     **Interpretation Guide:**
@@ -1083,7 +1538,7 @@ with tab3:
         'Training Set': '{:.4f}',
         'Validation Set': '{:.4f}',
         'Difference': '{:.4f}'
-    }), use_container_width=True)
+    }), width='stretch')
 
 with tab4:
     st.subheader("Parameter Evolution During Training")
@@ -1116,7 +1571,7 @@ with tab4:
         template='plotly_white'
     )
     
-    st.plotly_chart(fig_params, use_container_width=True)
+    st.plotly_chart(fig_params, width='stretch')
 
 # Model Evaluation
 st.header("4️⃣ Model Evaluation Metrics")
