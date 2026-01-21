@@ -77,7 +77,7 @@ fig_split.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_split, width='stretch')
+st.plotly_chart(fig_split, width='stretch', key='train_val_split')
 
 st.markdown("""
 **Split Details:**
@@ -135,7 +135,7 @@ fig_initial.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_initial, width='stretch')
+st.plotly_chart(fig_initial, width='stretch', key='initial_regression_line')
 
 st.markdown("""
 **Note:** The orange dashed line shows the initial random regression line before any training. 
@@ -268,7 +268,7 @@ with tab2:
             height=350
         )
         
-        st.plotly_chart(fig_train_err, width='stretch')
+        st.plotly_chart(fig_train_err, width='stretch', key='train_error_histogram')
         
         # Statistics
         train_errors = error_stats['train']['errors']
@@ -300,7 +300,7 @@ with tab2:
             height=350
         )
         
-        st.plotly_chart(fig_val_err, width='stretch')
+        st.plotly_chart(fig_val_err, width='stretch', key='val_error_histogram')
         
         # Statistics
         val_errors = error_stats['validation']['errors']
@@ -341,7 +341,7 @@ with tab2:
         height=400
     )
     
-    st.plotly_chart(fig_combined_err, width='stretch')
+    st.plotly_chart(fig_combined_err, width='stretch', key='combined_error_dist')
     
     st.markdown("""
     **Interpretation:**
@@ -450,7 +450,7 @@ with tab2:
         height=400
     )
     
-    st.plotly_chart(fig_squared, width='stretch')
+    st.plotly_chart(fig_squared, width='stretch', key='squared_errors_plot')
     
     st.markdown("""
     **Why Squared Errors Matter:**
@@ -495,6 +495,362 @@ with tab2:
         })
         st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
 
+with tab3:
+    st.subheader("Before vs After Training Comparison")
+    
+    fig_comparison = go.Figure()
+    
+    # Add data points
+    fig_comparison.add_trace(go.Scatter(
+        x=x,
+        y=y,
+        mode="markers",
+        name="Synthetic Data",
+        marker=dict(color='lightblue', size=8, opacity=0.6)
+    ))
+    
+    # Add initial regression line (before training)
+    y_initial = m.predict_with_params(x, initial_params['initial_slope'], initial_params['initial_intercept'])
+    fig_comparison.add_trace(go.Scatter(
+        x=x,
+        y=y_initial,
+        mode="lines",
+        name="Initial Line (Before Training)",
+        line=dict(color="orange", width=2, dash='dash')
+    ))
+
+    # Add final regression line (after training)
+    fig_comparison.add_trace(go.Scatter(
+        x=x,
+        y=m.predict(x),
+        mode="lines",
+        name="Final Line (After Training)",
+        line=dict(color="red", width=3)
+    ))
+
+    fig_comparison.update_layout(
+        title="Regression Line: Before vs After Training",
+        xaxis_title="X",
+        yaxis_title="Y",
+        template='plotly_white'
+    )
+
+    st.plotly_chart(fig_comparison, width='stretch', key='best_fit_comparison')
+    
+    # Display parameter comparison
+    st.markdown("### Parameter Comparison")
+    
+    comparison_df = pd.DataFrame({
+        'Parameter': ['Slope (w)', 'Intercept (b)'],
+        'Initial Value': [initial_params['initial_slope'], initial_params['initial_intercept']],
+        'Final Value': [m.slope, m.intercept],
+        'Change': [m.slope - initial_params['initial_slope'], 
+                   m.intercept - initial_params['initial_intercept']]
+    })
+    
+    st.dataframe(comparison_df, width='stretch')
+    
+    st.write(f"**Initial Equation:** y = {initial_params['initial_intercept']:.4f} + {initial_params['initial_slope']:.4f}x")
+    st.write(f"**Final Equation:** y = {m.intercept:.4f} + {m.slope:.4f}x")
+
+with tab4:
+    st.subheader("Predicted vs Actual Values Analysis")
+    
+    # Get training and validation data
+    X_train = np.array(m.X_train).flatten()
+    y_train = np.array(m.y_train).flatten()
+    X_val = np.array(m.X_test).flatten()
+    y_val = np.array(m.y_test).flatten()
+    
+    # Generate predictions
+    y_train_pred = m.predict(X_train)
+    y_val_pred = m.predict(X_val)
+    
+    # Create two columns for train and validation plots
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Training Set")
+        
+        # Scatter plot: Predicted vs Actual
+        fig_train = go.Figure()
+        
+        # Add scatter points
+        fig_train.add_trace(go.Scatter(
+            x=y_train,
+            y=y_train_pred,
+            mode='markers',
+            name='Training Data',
+            marker=dict(color='blue', size=8, opacity=0.6),
+            text=[f'Actual: {y_train[i]:.2f}<br>Predicted: {y_train_pred[i]:.2f}<br>Error: {y_train[i]-y_train_pred[i]:.2f}' 
+                  for i in range(len(y_train))],
+            hovertemplate='%{text}<extra></extra>'
+        ))
+        
+        # Add perfect prediction line (y = x)
+        min_val = min(y_train.min(), y_train_pred.min())
+        max_val = max(y_train.max(), y_train_pred.max())
+        fig_train.add_trace(go.Scatter(
+            x=[min_val, max_val],
+            y=[min_val, max_val],
+            mode='lines',
+            name='Perfect Prediction',
+            line=dict(color='red', width=2, dash='dash')
+        ))
+        
+        fig_train.update_layout(
+            title="Training Set: Predicted vs Actual",
+            xaxis_title="Actual Values",
+            yaxis_title="Predicted Values",
+            template='plotly_white',
+            showlegend=True,
+            height=400
+        )
+        
+        st.plotly_chart(fig_train, width='stretch', key='pred_vs_actual_train')
+        
+        # Training set statistics
+        train_residuals = y_train - y_train_pred
+        st.write(f"**Training MSE:** {np.mean(train_residuals**2):.4f}")
+        st.write(f"**Training MAE:** {np.mean(np.abs(train_residuals)):.4f}")
+        st.write(f"**Mean Residual:** {np.mean(train_residuals):.4f}")
+        st.write(f"**Std Residual:** {np.std(train_residuals):.4f}")
+    
+    with col2:
+        st.markdown("#### Validation Set")
+        
+        # Scatter plot: Predicted vs Actual
+        fig_val = go.Figure()
+        
+        # Add scatter points
+        fig_val.add_trace(go.Scatter(
+            x=y_val,
+            y=y_val_pred,
+            mode='markers',
+            name='Validation Data',
+            marker=dict(color='green', size=8, opacity=0.6),
+            text=[f'Actual: {y_val[i]:.2f}<br>Predicted: {y_val_pred[i]:.2f}<br>Error: {y_val[i]-y_val_pred[i]:.2f}' 
+                  for i in range(len(y_val))],
+            hovertemplate='%{text}<extra></extra>'
+        ))
+        
+        # Add perfect prediction line (y = x)
+        min_val = min(y_val.min(), y_val_pred.min())
+        max_val = max(y_val.max(), y_val_pred.max())
+        fig_val.add_trace(go.Scatter(
+            x=[min_val, max_val],
+            y=[min_val, max_val],
+            mode='lines',
+            name='Perfect Prediction',
+            line=dict(color='red', width=2, dash='dash')
+        ))
+        
+        fig_val.update_layout(
+            title="Validation Set: Predicted vs Actual",
+            xaxis_title="Actual Values",
+            yaxis_title="Predicted Values",
+            template='plotly_white',
+            showlegend=True,
+            height=400
+        )
+        
+        st.plotly_chart(fig_val, width='stretch', key='pred_vs_actual_val')
+        
+        # Validation set statistics
+        val_residuals = y_val - y_val_pred
+        st.write(f"**Validation MSE:** {np.mean(val_residuals**2):.4f}")
+        st.write(f"**Validation MAE:** {np.mean(np.abs(val_residuals)):.4f}")
+        st.write(f"**Mean Residual:** {np.mean(val_residuals):.4f}")
+        st.write(f"**Std Residual:** {np.std(val_residuals):.4f}")
+    
+    st.divider()
+    
+    # Combined residual plot
+    st.markdown("#### Residual Analysis")
+    
+    fig_residuals = go.Figure()
+    
+    # Training residuals
+    fig_residuals.add_trace(go.Scatter(
+        x=X_train,
+        y=train_residuals,
+        mode='markers',
+        name='Training Residuals',
+        marker=dict(color='blue', size=6, opacity=0.6)
+    ))
+    
+    # Validation residuals
+    fig_residuals.add_trace(go.Scatter(
+        x=X_val,
+        y=val_residuals,
+        mode='markers',
+        name='Validation Residuals',
+        marker=dict(color='green', size=6, opacity=0.6)
+    ))
+    
+    # Zero line
+    fig_residuals.add_hline(y=0, line_dash="dash", line_color="red", 
+                            annotation_text="Zero Error Line")
+    
+    fig_residuals.update_layout(
+        title="Residual Plot: Errors vs Input Values",
+        xaxis_title="X (Input Values)",
+        yaxis_title="Residuals (Actual - Predicted)",
+        template='plotly_white',
+        showlegend=True,
+        height=400
+    )
+    
+    st.plotly_chart(fig_residuals, width='stretch', key='residuals_plot')
+    
+    st.markdown("""
+    **Interpretation Guide:**
+    - **Points on red diagonal line** = Perfect predictions (actual = predicted)
+    - **Points above the line** = Model underpredicts (actual > predicted)
+    - **Points below the line** = Model overpredicts (actual < predicted)
+    - **Residuals near zero** = Good predictions
+    - **Random scatter in residuals** = Good model fit (no pattern means no systematic bias)
+    - **Pattern in residuals** = Model is missing something (non-linear relationship, etc.)
+    """)
+    
+    # Statistical comparison
+    st.markdown("#### Train vs Validation Comparison")
+    comparison_metrics = pd.DataFrame({
+        'Metric': ['MSE', 'MAE', 'Mean Residual', 'Std Residual'],
+        'Training Set': [
+            np.mean(train_residuals**2),
+            np.mean(np.abs(train_residuals)),
+            np.mean(train_residuals),
+            np.std(train_residuals)
+        ],
+        'Validation Set': [
+            np.mean(val_residuals**2),
+            np.mean(np.abs(val_residuals)),
+            np.mean(val_residuals),
+            np.std(val_residuals)
+        ]
+    })
+    comparison_metrics['Difference'] = comparison_metrics['Validation Set'] - comparison_metrics['Training Set']
+    
+    st.dataframe(comparison_metrics.style.format({
+        'Training Set': '{:.4f}',
+        'Validation Set': '{:.4f}',
+        'Difference': '{:.4f}'
+    }), width='stretch')
+
+with tab5:
+    st.subheader("Parameter Evolution During Training")
+    
+    st.markdown("""
+    This visualization shows how the model parameters (slope and intercept) change 
+    during the training process as gradient descent optimizes them.
+    """)
+    
+    fig_params = go.Figure()
+    
+    # Plot slope evolution
+    fig_params.add_trace(go.Scatter(
+        x=iterations,
+        y=history['slope'],
+        mode='lines',
+        name='Slope (w)',
+        line=dict(color='green', width=2)
+    ))
+    
+    # Plot intercept evolution
+    fig_params.add_trace(go.Scatter(
+        x=iterations,
+        y=history['intercept'],
+        mode='lines',
+        name='Intercept (b)',
+        line=dict(color='purple', width=2)
+    ))
+    
+    fig_params.update_layout(
+        title="Parameter Values Over Iterations",
+        xaxis_title="Iteration",
+        yaxis_title="Parameter Value",
+        hovermode='x unified',
+        template='plotly_white',
+        height=450
+    )
+    
+    st.plotly_chart(fig_params, width='stretch', key='param_evolution_main')
+    
+    # Parameter statistics
+    st.markdown("### Parameter Evolution Statistics")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Slope (w) Evolution")
+        st.metric("Initial Slope", f"{history['slope'][0]:.6f}")
+        st.metric("Final Slope", f"{history['slope'][-1]:.6f}")
+        slope_change = history['slope'][-1] - history['slope'][0]
+        st.metric("Total Change", f"{slope_change:.6f}")
+        
+        # Calculate rate of change
+        slope_changes = [history['slope'][i+1] - history['slope'][i] for i in range(len(history['slope'])-1)]
+        st.metric("Avg Change per Iteration", f"{np.mean(slope_changes):.8f}")
+        st.metric("Max Single-Iteration Change", f"{max(np.abs(slope_changes)):.6f}")
+    
+    with col2:
+        st.markdown("#### Intercept (b) Evolution")
+        st.metric("Initial Intercept", f"{history['intercept'][0]:.6f}")
+        st.metric("Final Intercept", f"{history['intercept'][-1]:.6f}")
+        intercept_change = history['intercept'][-1] - history['intercept'][0]
+        st.metric("Total Change", f"{intercept_change:.6f}")
+        
+        # Calculate rate of change
+        intercept_changes = [history['intercept'][i+1] - history['intercept'][i] for i in range(len(history['intercept'])-1)]
+        st.metric("Avg Change per Iteration", f"{np.mean(intercept_changes):.8f}")
+        st.metric("Max Single-Iteration Change", f"{max(np.abs(intercept_changes)):.6f}")
+    
+    st.divider()
+    
+    # Parameter change rate over time
+    st.markdown("### Rate of Parameter Change")
+    
+    fig_change_rate = go.Figure()
+    
+    # Slope change rate
+    fig_change_rate.add_trace(go.Scatter(
+        x=list(range(1, len(slope_changes) + 1)),
+        y=np.abs(slope_changes),
+        mode='lines',
+        name='|Δw| per iteration',
+        line=dict(color='green', width=2)
+    ))
+    
+    # Intercept change rate
+    fig_change_rate.add_trace(go.Scatter(
+        x=list(range(1, len(intercept_changes) + 1)),
+        y=np.abs(intercept_changes),
+        mode='lines',
+        name='|Δb| per iteration',
+        line=dict(color='purple', width=2)
+    ))
+    
+    fig_change_rate.update_layout(
+        title="Absolute Parameter Change Rate per Iteration",
+        xaxis_title="Iteration",
+        yaxis_title="Absolute Change",
+        yaxis_type="log",
+        template='plotly_white',
+        hovermode='x unified',
+        height=400
+    )
+    
+    st.plotly_chart(fig_change_rate, width='stretch', key='param_change_rate')
+    
+    st.markdown("""
+    **Interpretation:**
+    - **Large changes early**: Parameters far from optimum → big updates
+    - **Small changes later**: Parameters near optimum → fine-tuning
+    - **Decreasing change rate**: Sign of convergence
+    - **Log scale**: Shows exponential decay pattern
+    """)
+
 with tab6:
     st.subheader("Gradient Descent Dynamics")
     
@@ -536,7 +892,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_evolution, width='stretch')
+    st.plotly_chart(fig_grad_evolution, width='stretch', key='gradient_evolution')
     
     st.markdown("""
     **Interpretation:**
@@ -571,7 +927,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_mag, width='stretch')
+    st.plotly_chart(fig_grad_mag, width='stretch', key='gradient_magnitude')
     
     # Gradient statistics
     col1, col2, col3, col4 = st.columns(4)
@@ -619,7 +975,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_param_change, width='stretch')
+    st.plotly_chart(fig_param_change, width='stretch', key='param_change_magnitude')
     
     st.markdown("""
     **Parameter Change Interpretation:**
@@ -673,7 +1029,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_loss, width='stretch')
+    st.plotly_chart(fig_grad_loss, width='stretch', key='grad_loss_correlation')
     
     st.markdown("""
     **Key Relationship:**
@@ -740,7 +1096,7 @@ with tab6:
         showlegend=True
     )
     
-    st.plotly_chart(fig_grad_vector, width='stretch')
+    st.plotly_chart(fig_grad_vector, width='stretch', key='param_space_trajectory')
     
     st.markdown("""
     **Parameter Space Interpretation:**
