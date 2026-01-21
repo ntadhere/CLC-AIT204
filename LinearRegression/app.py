@@ -150,350 +150,997 @@ st.write("Learning Rate:", learning_rate)
 st.write("Number of Iterations:", n_iterations)
 
 with st.spinner("Training model..."):
-    m.fit()  # Will work with your current model.py
+    m.fit().fit(method="mini-batch").fit(method="stochastic")
 
-metrics = m.calc_metrics()
-history = m.get_history()
+metrics, mini_batch_metrics, stochastic_metrics = m.calc_metrics()
+history, mini_batch_history, stochastic_history = m.get_history()
 
 # Display final loss values
-final_loss = m.get_final_loss()
+final_loss, mini_batch_final_loss, stochastic_final_loss = m.get_final_loss()
 col1, col2 = st.columns(2)
 with col1:
-    st.metric("Final Training Loss (MSE)", f"{final_loss['final_train_loss']:.4f}")
+    st.metric("Final Batch Training Loss (MSE)", f"{final_loss['final_train_loss']:.4f}")
 with col2:
-    st.metric("Final Validation Loss (MSE)", f"{final_loss['final_val_loss']:.4f}")
+    st.metric("Final Batch Validation Loss (MSE)", f"{final_loss['final_val_loss']:.4f}")
+
+col3, col4 = st.columns(2)
+with col3:
+    st.metric("Final Mini-Batch Training Loss (MSE)", f"{mini_batch_final_loss['final_train_loss']:.4f}")
+with col4:
+    st.metric("Final Mini-Batch Validation Loss (MSE)", f"{mini_batch_final_loss['final_val_loss']:.4f}")
+
+col5,col6 = st.columns(2)
+with col5:
+    st.metric("Final Stochastic Gradient Training Loss (MSE)", f"{stochastic_final_loss['final_train_loss']:.4f}")
+with col6:
+    st.metric("Final Stochastic Gradient Training Loss (MSE)", f"{stochastic_final_loss['final_val_loss']:.4f}")
 
 # Visualizations
 st.header("3️⃣ Training Visualizations")
 
 # Get error statistics
-error_stats = m.get_error_statistics()
+error_stats,mini_batch_error_stats,stochastic_error_stats = m.get_error_statistics()
 
 # Create tabs for different visualizations
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+tab1, tab2, tab3, tab4, tab6, tab7 = st.tabs([
     "Loss Curves", 
     "Error Analysis", 
     "Best Fit Line", 
-    "Predicted vs Actual", 
-    "Parameter Evolution",
+    "Predicted vs Actual",
     "Gradient Dynamics",
     "Advanced Analysis"
 ])
 
 with tab1:
     st.subheader("Training and Validation Loss Over Iterations")
+
+    btab,mbtab,sgtab = st.tabs([
+        "Batch",
+        "Mini-Batch",
+        "Stochastic"
+    ])
     
-    # Create loss curve plot
-    iterations = list(range(1, n_iterations + 1))
+    with btab:
+        # Create loss curve plot
+        iterations = list(range(1, n_iterations + 1))
+        
+        fig_loss = go.Figure()
+        
+        # Add training loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=history['train_loss'],
+            mode='lines',
+            name='Training Loss',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # Add validation loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=history['val_loss'],
+            mode='lines',
+            name='Validation Loss',
+            line=dict(color='red', width=2)
+        ))
+        
+        fig_loss.update_layout(
+            title="Loss (MSE) vs Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Mean Squared Error (MSE)",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_loss, width='stretch')
+        
+        # Analysis text
+        st.markdown("### Loss Curve Analysis")
+        
+        # Calculate convergence metrics
+        train_loss_diff = history['train_loss'][0] - history['train_loss'][-1]
+        val_loss_diff = history['val_loss'][0] - history['val_loss'][-1]
+        
+        st.write(f"""
+        **Initial Training Loss:** {history['train_loss'][0]:.4f}  
+        **Final Training Loss:** {history['train_loss'][-1]:.4f}  
+        **Loss Reduction:** {train_loss_diff:.4f} ({(train_loss_diff/history['train_loss'][0]*100):.2f}%)
+        
+        **Initial Validation Loss:** {history['val_loss'][0]:.4f}  
+        **Final Validation Loss:** {history['val_loss'][-1]:.4f}  
+        **Loss Reduction:** {val_loss_diff:.4f} ({(val_loss_diff/history['val_loss'][0]*100):.2f}%)
+        """)
+        
+        # Check for overfitting
+        if final_loss['final_val_loss'] > final_loss['final_train_loss'] * 1.2:
+            st.warning("⚠️ Potential overfitting detected: Validation loss is significantly higher than training loss.")
+        elif abs(final_loss['final_val_loss'] - final_loss['final_train_loss']) < 0.01:
+            st.success("✅ Good generalization: Training and validation losses are similar.")
+
+    with mbtab:
+        # Create loss curve plot
+        iterations = list(range(1, n_iterations + 1))
+        
+        fig_loss = go.Figure()
+        
+        # Add training loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=mini_batch_history['train_loss'],
+            mode='lines',
+            name='Training Loss',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # Add validation loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=mini_batch_history['val_loss'],
+            mode='lines',
+            name='Validation Loss',
+            line=dict(color='red', width=2)
+        ))
+        
+        fig_loss.update_layout(
+            title="Loss (MSE) vs Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Mean Squared Error (MSE)",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_loss, width='stretch')
+        
+        # Analysis text
+        st.markdown("### Loss Curve Analysis")
+        
+        # Calculate convergence metrics
+        train_loss_diff = mini_batch_history['train_loss'][0] - mini_batch_history['train_loss'][-1]
+        val_loss_diff = mini_batch_history['val_loss'][0] - mini_batch_history['val_loss'][-1]
+        
+        st.write(f"""
+        **Initial Training Loss:** {mini_batch_history['train_loss'][0]:.4f}  
+        **Final Training Loss:** {mini_batch_history['train_loss'][-1]:.4f}  
+        **Loss Reduction:** {train_loss_diff:.4f} ({(train_loss_diff/mini_batch_history['train_loss'][0]*100):.2f}%)
+        
+        **Initial Validation Loss:** {mini_batch_history['val_loss'][0]:.4f}  
+        **Final Validation Loss:** {mini_batch_history['val_loss'][-1]:.4f}  
+        **Loss Reduction:** {val_loss_diff:.4f} ({(val_loss_diff/mini_batch_history['val_loss'][0]*100):.2f}%)
+        """)
+        
+        # Check for overfitting
+        if mini_batch_final_loss['final_val_loss'] > mini_batch_final_loss['final_train_loss'] * 1.2:
+            st.warning("⚠️ Potential overfitting detected: Validation loss is significantly higher than training loss.")
+        elif abs(mini_batch_final_loss['final_val_loss'] - mini_batch_final_loss['final_train_loss']) < 0.01:
+            st.success("✅ Good generalization: Training and validation losses are similar.")
     
-    fig_loss = go.Figure()
-    
-    # Add training loss
-    fig_loss.add_trace(go.Scatter(
-        x=iterations,
-        y=history['train_loss'],
-        mode='lines',
-        name='Training Loss',
-        line=dict(color='blue', width=2)
-    ))
-    
-    # Add validation loss
-    fig_loss.add_trace(go.Scatter(
-        x=iterations,
-        y=history['val_loss'],
-        mode='lines',
-        name='Validation Loss',
-        line=dict(color='red', width=2)
-    ))
-    
-    fig_loss.update_layout(
-        title="Loss (MSE) vs Iterations",
-        xaxis_title="Iteration",
-        yaxis_title="Mean Squared Error (MSE)",
-        hovermode='x unified',
-        template='plotly_white'
-    )
-    
-    st.plotly_chart(fig_loss, width='stretch')
-    
-    # Analysis text
-    st.markdown("### Loss Curve Analysis")
-    
-    # Calculate convergence metrics
-    train_loss_diff = history['train_loss'][0] - history['train_loss'][-1]
-    val_loss_diff = history['val_loss'][0] - history['val_loss'][-1]
-    
-    st.write(f"""
-    **Initial Training Loss:** {history['train_loss'][0]:.4f}  
-    **Final Training Loss:** {history['train_loss'][-1]:.4f}  
-    **Loss Reduction:** {train_loss_diff:.4f} ({(train_loss_diff/history['train_loss'][0]*100):.2f}%)
-    
-    **Initial Validation Loss:** {history['val_loss'][0]:.4f}  
-    **Final Validation Loss:** {history['val_loss'][-1]:.4f}  
-    **Loss Reduction:** {val_loss_diff:.4f} ({(val_loss_diff/history['val_loss'][0]*100):.2f}%)
-    """)
-    
-    # Check for overfitting
-    if final_loss['final_val_loss'] > final_loss['final_train_loss'] * 1.2:
-        st.warning("⚠️ Potential overfitting detected: Validation loss is significantly higher than training loss.")
-    elif abs(final_loss['final_val_loss'] - final_loss['final_train_loss']) < 0.01:
-        st.success("✅ Good generalization: Training and validation losses are similar.")
+    with sgtab:
+        # Create loss curve plot
+        iterations = list(range(1, n_iterations + 1))
+        
+        fig_loss = go.Figure()
+        
+        # Add training loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=stochastic_history['train_loss'],
+            mode='lines',
+            name='Training Loss',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # Add validation loss
+        fig_loss.add_trace(go.Scatter(
+            x=iterations,
+            y=stochastic_history['val_loss'],
+            mode='lines',
+            name='Validation Loss',
+            line=dict(color='red', width=2)
+        ))
+        
+        fig_loss.update_layout(
+            title="Loss (MSE) vs Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Mean Squared Error (MSE)",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_loss, width='stretch')
+        
+        # Analysis text
+        st.markdown("### Loss Curve Analysis")
+        
+        # Calculate convergence metrics
+        train_loss_diff = stochastic_history['train_loss'][0] - stochastic_history['train_loss'][-1]
+        val_loss_diff = stochastic_history['val_loss'][0] - stochastic_history['val_loss'][-1]
+        
+        st.write(f"""
+        **Initial Training Loss:** {stochastic_history['train_loss'][0]:.4f}  
+        **Final Training Loss:** {stochastic_history['train_loss'][-1]:.4f}  
+        **Loss Reduction:** {train_loss_diff:.4f} ({(train_loss_diff/stochastic_history['train_loss'][0]*100):.2f}%)
+        
+        **Initial Validation Loss:** {stochastic_history['val_loss'][0]:.4f}  
+        **Final Validation Loss:** {stochastic_history['val_loss'][-1]:.4f}  
+        **Loss Reduction:** {val_loss_diff:.4f} ({(val_loss_diff/stochastic_history['val_loss'][0]*100):.2f}%)
+        """)
+        
+        # Check for overfitting
+        if stochastic_final_loss['final_val_loss'] > stochastic_final_loss['final_train_loss'] * 1.2:
+            st.warning("⚠️ Potential overfitting detected: Validation loss is significantly higher than training loss.")
+        elif abs(stochastic_final_loss['final_val_loss'] - stochastic_final_loss['final_train_loss']) < 0.01:
+            st.success("✅ Good generalization: Training and validation losses are similar.")
 
 with tab2:
     st.subheader("Comprehensive Error and Loss Analysis")
+
+    btab,mbtab,sgtab = st.tabs([
+        "Batch",
+        "Mini-Batch",
+        "Stochastic"
+    ])
     
-    # Error distribution comparison
-    st.markdown("### 1. Error Distribution Analysis")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Training Set Errors")
+    with btab:
+        # Error distribution comparison
+        st.markdown("### 1. Error Distribution Analysis")
         
-        # Histogram of training errors
-        fig_train_err = go.Figure()
-        fig_train_err.add_trace(go.Histogram(
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Errors")
+            
+            # Histogram of training errors
+            fig_train_err = go.Figure()
+            fig_train_err.add_trace(go.Histogram(
+                x=error_stats['train']['errors'],
+                nbinsx=30,
+                name='Training Errors',
+                marker=dict(color='blue', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_train_err.update_layout(
+                title="Distribution of Training Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_train_err, width='stretch')
+            
+            # Statistics
+            train_errors = error_stats['train']['errors']
+            st.write(f"**Mean Error:** {np.mean(train_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(train_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(train_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(train_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(train_errors):.4f}")
+            st.write(f"**Range:** {np.max(train_errors) - np.min(train_errors):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set Errors")
+            
+            # Histogram of validation errors
+            fig_val_err = go.Figure()
+            fig_val_err.add_trace(go.Histogram(
+                x=error_stats['validation']['errors'],
+                nbinsx=30,
+                name='Validation Errors',
+                marker=dict(color='green', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_val_err.update_layout(
+                title="Distribution of Validation Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_val_err, width='stretch')
+            
+            # Statistics
+            val_errors = error_stats['validation']['errors']
+            st.write(f"**Mean Error:** {np.mean(val_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(val_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(val_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(val_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(val_errors):.4f}")
+            st.write(f"**Range:** {np.max(val_errors) - np.min(val_errors):.4f}")
+        
+        st.divider()
+        
+        # Combined error distribution
+        st.markdown("### 2. Combined Error Distribution")
+        
+        fig_combined_err = go.Figure()
+        
+        fig_combined_err.add_trace(go.Histogram(
             x=error_stats['train']['errors'],
-            nbinsx=30,
             name='Training Errors',
-            marker=dict(color='blue', opacity=0.7),
-            showlegend=False
+            marker=dict(color='blue', opacity=0.6),
+            nbinsx=30
         ))
         
-        fig_train_err.update_layout(
-            title="Distribution of Training Errors",
-            xaxis_title="Error (Actual - Predicted)",
-            yaxis_title="Frequency",
-            template='plotly_white',
-            height=350
-        )
-        
-        st.plotly_chart(fig_train_err, width='stretch')
-        
-        # Statistics
-        train_errors = error_stats['train']['errors']
-        st.write(f"**Mean Error:** {np.mean(train_errors):.4f}")
-        st.write(f"**Median Error:** {np.median(train_errors):.4f}")
-        st.write(f"**Std Dev:** {np.std(train_errors):.4f}")
-        st.write(f"**Min Error:** {np.min(train_errors):.4f}")
-        st.write(f"**Max Error:** {np.max(train_errors):.4f}")
-        st.write(f"**Range:** {np.max(train_errors) - np.min(train_errors):.4f}")
-    
-    with col2:
-        st.markdown("#### Validation Set Errors")
-        
-        # Histogram of validation errors
-        fig_val_err = go.Figure()
-        fig_val_err.add_trace(go.Histogram(
+        fig_combined_err.add_trace(go.Histogram(
             x=error_stats['validation']['errors'],
-            nbinsx=30,
             name='Validation Errors',
-            marker=dict(color='green', opacity=0.7),
-            showlegend=False
+            marker=dict(color='green', opacity=0.6),
+            nbinsx=30
         ))
         
-        fig_val_err.update_layout(
-            title="Distribution of Validation Errors",
+        fig_combined_err.update_layout(
+            title="Training vs Validation Error Distribution",
             xaxis_title="Error (Actual - Predicted)",
             yaxis_title="Frequency",
+            barmode='overlay',
             template='plotly_white',
-            height=350
+            height=400
         )
         
-        st.plotly_chart(fig_val_err, width='stretch')
+        st.plotly_chart(fig_combined_err, width='stretch')
         
-        # Statistics
-        val_errors = error_stats['validation']['errors']
-        st.write(f"**Mean Error:** {np.mean(val_errors):.4f}")
-        st.write(f"**Median Error:** {np.median(val_errors):.4f}")
-        st.write(f"**Std Dev:** {np.std(val_errors):.4f}")
-        st.write(f"**Min Error:** {np.min(val_errors):.4f}")
-        st.write(f"**Max Error:** {np.max(val_errors):.4f}")
-        st.write(f"**Range:** {np.max(val_errors) - np.min(val_errors):.4f}")
-    
-    st.divider()
-    
-    # Combined error distribution
-    st.markdown("### 2. Combined Error Distribution")
-    
-    fig_combined_err = go.Figure()
-    
-    fig_combined_err.add_trace(go.Histogram(
-        x=error_stats['train']['errors'],
-        name='Training Errors',
-        marker=dict(color='blue', opacity=0.6),
-        nbinsx=30
-    ))
-    
-    fig_combined_err.add_trace(go.Histogram(
-        x=error_stats['validation']['errors'],
-        name='Validation Errors',
-        marker=dict(color='green', opacity=0.6),
-        nbinsx=30
-    ))
-    
-    fig_combined_err.update_layout(
-        title="Training vs Validation Error Distribution",
-        xaxis_title="Error (Actual - Predicted)",
-        yaxis_title="Frequency",
-        barmode='overlay',
-        template='plotly_white',
-        height=400
-    )
-    
-    st.plotly_chart(fig_combined_err, width='stretch')
-    
-    st.markdown("""
-    **Interpretation:**
-    - Errors centered around zero indicate unbiased predictions
-    - Similar distributions suggest good generalization
-    - Normal (bell-shaped) distribution validates linear regression assumptions
-    """)
-    
-    st.divider()
-    
-    # Loss metrics comparison
-    st.markdown("### 3. Loss Function Metrics Comparison")
-    
-    loss_comparison = pd.DataFrame({
-        'Loss Function': ['MSE (Mean Squared Error)', 'MAE (Mean Absolute Error)', 'RMSE (Root Mean Squared Error)'],
-        'Training Set': [
-            error_stats['train']['mse'],
-            error_stats['train']['mae'],
-            error_stats['train']['rmse']
-        ],
-        'Validation Set': [
-            error_stats['validation']['mse'],
-            error_stats['validation']['mae'],
-            error_stats['validation']['rmse']
-        ],
-        'Formula': [
-            '(1/n) Σ(yᵢ - ŷᵢ)²',
-            '(1/n) Σ|yᵢ - ŷᵢ|',
-            '√[(1/n) Σ(yᵢ - ŷᵢ)²]'
-        ]
-    })
-    
-    loss_comparison['Absolute Difference'] = abs(loss_comparison['Validation Set'] - loss_comparison['Training Set'])
-    loss_comparison['Relative Difference (%)'] = (
-        loss_comparison['Absolute Difference'] / loss_comparison['Training Set'] * 100
-    )
-    
-    st.dataframe(loss_comparison.style.format({
-        'Training Set': '{:.6f}',
-        'Validation Set': '{:.6f}',
-        'Absolute Difference': '{:.6f}',
-        'Relative Difference (%)': '{:.2f}%'
-    }), width='stretch')
-    
-    st.markdown("""
-    **Loss Function Characteristics:**
-    
-    | Metric | Sensitivity | Units | Use Case |
-    |--------|-------------|-------|----------|
-    | **MSE** | High (squares errors) | y² | Optimization (gradient descent) |
-    | **MAE** | Medium (absolute values) | y | Robust to outliers |
-    | **RMSE** | High (squares errors) | y | Interpretable in original units |
-    """)
-    
-    st.divider()
-    
-    # Squared errors visualization
-    st.markdown("### 4. Squared Errors Visualization")
-    
-    X_train_viz = np.array(m.X_train).flatten()
-    X_val_viz = np.array(m.X_test).flatten()
-    
-    train_squared_errors = error_stats['train']['errors'] ** 2
-    val_squared_errors = error_stats['validation']['errors'] ** 2
-    
-    fig_squared = go.Figure()
-    
-    fig_squared.add_trace(go.Scatter(
-        x=X_train_viz,
-        y=train_squared_errors,
-        mode='markers',
-        name='Training Squared Errors',
-        marker=dict(color='blue', size=8, opacity=0.6)
-    ))
-    
-    fig_squared.add_trace(go.Scatter(
-        x=X_val_viz,
-        y=val_squared_errors,
-        mode='markers',
-        name='Validation Squared Errors',
-        marker=dict(color='green', size=8, opacity=0.6)
-    ))
-    
-    # Add mean squared error lines
-    fig_squared.add_hline(
-        y=error_stats['train']['mse'],
-        line_dash="dash",
-        line_color="blue",
-        annotation_text=f"Train MSE: {error_stats['train']['mse']:.4f}",
-        annotation_position="right"
-    )
-    
-    fig_squared.add_hline(
-        y=error_stats['validation']['mse'],
-        line_dash="dash",
-        line_color="green",
-        annotation_text=f"Val MSE: {error_stats['validation']['mse']:.4f}",
-        annotation_position="right"
-    )
-    
-    fig_squared.update_layout(
-        title="Squared Errors vs Input Values",
-        xaxis_title="X (Input Values)",
-        yaxis_title="Squared Error (yᵢ - ŷᵢ)²",
-        template='plotly_white',
-        height=400
-    )
-    
-    st.plotly_chart(fig_squared, width='stretch')
-    
-    st.markdown("""
-    **Why Squared Errors Matter:**
-    - MSE is the average of these squared errors
-    - Larger errors are penalized more heavily (quadratic penalty)
-    - MSE is differentiable, making it suitable for gradient descent
-    - Outliers (points far from horizontal lines) contribute most to loss
-    """)
-    
-    st.divider()
-    
-    # Error percentiles
-    st.markdown("### 5. Error Percentile Analysis")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Training Set Percentiles")
-        train_percentiles = pd.DataFrame({
-            'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
-            'Error Value': [
-                np.percentile(train_errors, 0),
-                np.percentile(train_errors, 25),
-                np.percentile(train_errors, 50),
-                np.percentile(train_errors, 75),
-                np.percentile(train_errors, 100)
+        st.markdown("""
+        **Interpretation:**
+        - Errors centered around zero indicate unbiased predictions
+        - Similar distributions suggest good generalization
+        - Normal (bell-shaped) distribution validates linear regression assumptions
+        """)
+        
+        st.divider()
+        
+        # Loss metrics comparison
+        st.markdown("### 3. Loss Function Metrics Comparison")
+        
+        loss_comparison = pd.DataFrame({
+            'Loss Function': ['MSE (Mean Squared Error)', 'MAE (Mean Absolute Error)', 'RMSE (Root Mean Squared Error)'],
+            'Training Set': [
+                error_stats['train']['mse'],
+                error_stats['train']['mae'],
+                error_stats['train']['rmse']
+            ],
+            'Validation Set': [
+                error_stats['validation']['mse'],
+                error_stats['validation']['mae'],
+                error_stats['validation']['rmse']
+            ],
+            'Formula': [
+                '(1/n) Σ(yᵢ - ŷᵢ)²',
+                '(1/n) Σ|yᵢ - ŷᵢ|',
+                '√[(1/n) Σ(yᵢ - ŷᵢ)²]'
             ]
         })
-        st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
-    
-    with col2:
-        st.markdown("#### Validation Set Percentiles")
-        val_percentiles = pd.DataFrame({
-            'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
-            'Error Value': [
-                np.percentile(val_errors, 0),
-                np.percentile(val_errors, 25),
-                np.percentile(val_errors, 50),
-                np.percentile(val_errors, 75),
-                np.percentile(val_errors, 100)
+        
+        loss_comparison['Absolute Difference'] = abs(loss_comparison['Validation Set'] - loss_comparison['Training Set'])
+        loss_comparison['Relative Difference (%)'] = (
+            loss_comparison['Absolute Difference'] / loss_comparison['Training Set'] * 100
+        )
+        
+        st.dataframe(loss_comparison.style.format({
+            'Training Set': '{:.6f}',
+            'Validation Set': '{:.6f}',
+            'Absolute Difference': '{:.6f}',
+            'Relative Difference (%)': '{:.2f}%'
+        }), width='stretch')
+        
+        st.markdown("""
+        **Loss Function Characteristics:**
+        
+        | Metric | Sensitivity | Units | Use Case |
+        |--------|-------------|-------|----------|
+        | **MSE** | High (squares errors) | y² | Optimization (gradient descent) |
+        | **MAE** | Medium (absolute values) | y | Robust to outliers |
+        | **RMSE** | High (squares errors) | y | Interpretable in original units |
+        """)
+        
+        st.divider()
+        
+        # Squared errors visualization
+        st.markdown("### 4. Squared Errors Visualization")
+        
+        X_train_viz = np.array(m.X_train).flatten()
+        X_val_viz = np.array(m.X_test).flatten()
+        
+        train_squared_errors = error_stats['train']['errors'] ** 2
+        val_squared_errors = error_stats['validation']['errors'] ** 2
+        
+        fig_squared = go.Figure()
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_train_viz,
+            y=train_squared_errors,
+            mode='markers',
+            name='Training Squared Errors',
+            marker=dict(color='blue', size=8, opacity=0.6)
+        ))
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_val_viz,
+            y=val_squared_errors,
+            mode='markers',
+            name='Validation Squared Errors',
+            marker=dict(color='green', size=8, opacity=0.6)
+        ))
+        
+        # Add mean squared error lines
+        fig_squared.add_hline(
+            y=error_stats['train']['mse'],
+            line_dash="dash",
+            line_color="blue",
+            annotation_text=f"Train MSE: {error_stats['train']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.add_hline(
+            y=error_stats['validation']['mse'],
+            line_dash="dash",
+            line_color="green",
+            annotation_text=f"Val MSE: {error_stats['validation']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.update_layout(
+            title="Squared Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Squared Error (yᵢ - ŷᵢ)²",
+            template='plotly_white',
+            height=400
+        )
+        
+        st.plotly_chart(fig_squared, width='stretch')
+        
+        st.markdown("""
+        **Why Squared Errors Matter:**
+        - MSE is the average of these squared errors
+        - Larger errors are penalized more heavily (quadratic penalty)
+        - MSE is differentiable, making it suitable for gradient descent
+        - Outliers (points far from horizontal lines) contribute most to loss
+        """)
+        
+        st.divider()
+        
+        # Error percentiles
+        st.markdown("### 5. Error Percentile Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Percentiles")
+            train_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(train_errors, 0),
+                    np.percentile(train_errors, 25),
+                    np.percentile(train_errors, 50),
+                    np.percentile(train_errors, 75),
+                    np.percentile(train_errors, 100)
+                ]
+            })
+            st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+        
+        with col2:
+            st.markdown("#### Validation Set Percentiles")
+            val_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(val_errors, 0),
+                    np.percentile(val_errors, 25),
+                    np.percentile(val_errors, 50),
+                    np.percentile(val_errors, 75),
+                    np.percentile(val_errors, 100)
+                ]
+            })
+            st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+
+    with mbtab:
+        # Error distribution comparison
+        st.markdown("### 1. Error Distribution Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Errors")
+            
+            # Histogram of training errors
+            fig_train_err = go.Figure()
+            fig_train_err.add_trace(go.Histogram(
+                x=mini_batch_error_stats['train']['errors'],
+                nbinsx=30,
+                name='Training Errors',
+                marker=dict(color='blue', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_train_err.update_layout(
+                title="Distribution of Training Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_train_err, width='stretch')
+            
+            # Statistics
+            train_errors = mini_batch_error_stats['train']['errors']
+            st.write(f"**Mean Error:** {np.mean(train_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(train_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(train_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(train_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(train_errors):.4f}")
+            st.write(f"**Range:** {np.max(train_errors) - np.min(train_errors):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set Errors")
+            
+            # Histogram of validation errors
+            fig_val_err = go.Figure()
+            fig_val_err.add_trace(go.Histogram(
+                x=mini_batch_error_stats['validation']['errors'],
+                nbinsx=30,
+                name='Validation Errors',
+                marker=dict(color='green', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_val_err.update_layout(
+                title="Distribution of Validation Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_val_err, width='stretch')
+            
+            # Statistics
+            val_errors = mini_batch_error_stats['validation']['errors']
+            st.write(f"**Mean Error:** {np.mean(val_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(val_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(val_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(val_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(val_errors):.4f}")
+            st.write(f"**Range:** {np.max(val_errors) - np.min(val_errors):.4f}")
+        
+        st.divider()
+        
+        # Combined error distribution
+        st.markdown("### 2. Combined Error Distribution")
+        
+        fig_combined_err = go.Figure()
+        
+        fig_combined_err.add_trace(go.Histogram(
+            x=mini_batch_error_stats['train']['errors'],
+            name='Training Errors',
+            marker=dict(color='blue', opacity=0.6),
+            nbinsx=30
+        ))
+        
+        fig_combined_err.add_trace(go.Histogram(
+            x=mini_batch_error_stats['validation']['errors'],
+            name='Validation Errors',
+            marker=dict(color='green', opacity=0.6),
+            nbinsx=30
+        ))
+        
+        fig_combined_err.update_layout(
+            title="Training vs Validation Error Distribution",
+            xaxis_title="Error (Actual - Predicted)",
+            yaxis_title="Frequency",
+            barmode='overlay',
+            template='plotly_white',
+            height=400
+        )
+        
+        st.plotly_chart(fig_combined_err, width='stretch')
+        
+        st.markdown("""
+        **Interpretation:**
+        - Errors centered around zero indicate unbiased predictions
+        - Similar distributions suggest good generalization
+        - Normal (bell-shaped) distribution validates linear regression assumptions
+        """)
+        
+        st.divider()
+        
+        # Loss metrics comparison
+        st.markdown("### 3. Loss Function Metrics Comparison")
+        
+        loss_comparison = pd.DataFrame({
+            'Loss Function': ['MSE (Mean Squared Error)', 'MAE (Mean Absolute Error)', 'RMSE (Root Mean Squared Error)'],
+            'Training Set': [
+                mini_batch_error_stats['train']['mse'],
+                mini_batch_error_stats['train']['mae'],
+                mini_batch_error_stats['train']['rmse']
+            ],
+            'Validation Set': [
+                mini_batch_error_stats['validation']['mse'],
+                mini_batch_error_stats['validation']['mae'],
+                mini_batch_error_stats['validation']['rmse']
+            ],
+            'Formula': [
+                '(1/n) Σ(yᵢ - ŷᵢ)²',
+                '(1/n) Σ|yᵢ - ŷᵢ|',
+                '√[(1/n) Σ(yᵢ - ŷᵢ)²]'
             ]
         })
-        st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+        
+        loss_comparison['Absolute Difference'] = abs(loss_comparison['Validation Set'] - loss_comparison['Training Set'])
+        loss_comparison['Relative Difference (%)'] = (
+            loss_comparison['Absolute Difference'] / loss_comparison['Training Set'] * 100
+        )
+        
+        st.dataframe(loss_comparison.style.format({
+            'Training Set': '{:.6f}',
+            'Validation Set': '{:.6f}',
+            'Absolute Difference': '{:.6f}',
+            'Relative Difference (%)': '{:.2f}%'
+        }), width='stretch')
+        
+        st.markdown("""
+        **Loss Function Characteristics:**
+        
+        | Metric | Sensitivity | Units | Use Case |
+        |--------|-------------|-------|----------|
+        | **MSE** | High (squares errors) | y² | Optimization (gradient descent) |
+        | **MAE** | Medium (absolute values) | y | Robust to outliers |
+        | **RMSE** | High (squares errors) | y | Interpretable in original units |
+        """)
+        
+        st.divider()
+        
+        # Squared errors visualization
+        st.markdown("### 4. Squared Errors Visualization")
+        
+        X_train_viz = np.array(m.X_train).flatten()
+        X_val_viz = np.array(m.X_test).flatten()
+        
+        train_squared_errors = mini_batch_error_stats['train']['errors'] ** 2
+        val_squared_errors = mini_batch_error_stats['validation']['errors'] ** 2
+        
+        fig_squared = go.Figure()
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_train_viz,
+            y=train_squared_errors,
+            mode='markers',
+            name='Training Squared Errors',
+            marker=dict(color='blue', size=8, opacity=0.6)
+        ))
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_val_viz,
+            y=val_squared_errors,
+            mode='markers',
+            name='Validation Squared Errors',
+            marker=dict(color='green', size=8, opacity=0.6)
+        ))
+        
+        # Add mean squared error lines
+        fig_squared.add_hline(
+            y=mini_batch_error_stats['train']['mse'],
+            line_dash="dash",
+            line_color="blue",
+            annotation_text=f"Train MSE: {mini_batch_error_stats['train']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.add_hline(
+            y=mini_batch_error_stats['validation']['mse'],
+            line_dash="dash",
+            line_color="green",
+            annotation_text=f"Val MSE: {mini_batch_error_stats['validation']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.update_layout(
+            title="Squared Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Squared Error (yᵢ - ŷᵢ)²",
+            template='plotly_white',
+            height=400
+        )
+        
+        st.plotly_chart(fig_squared, width='stretch')
+        
+        st.markdown("""
+        **Why Squared Errors Matter:**
+        - MSE is the average of these squared errors
+        - Larger errors are penalized more heavily (quadratic penalty)
+        - MSE is differentiable, making it suitable for gradient descent
+        - Outliers (points far from horizontal lines) contribute most to loss
+        """)
+        
+        st.divider()
+        
+        # Error percentiles
+        st.markdown("### 5. Error Percentile Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Percentiles")
+            train_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(train_errors, 0),
+                    np.percentile(train_errors, 25),
+                    np.percentile(train_errors, 50),
+                    np.percentile(train_errors, 75),
+                    np.percentile(train_errors, 100)
+                ]
+            })
+            st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+        
+        with col2:
+            st.markdown("#### Validation Set Percentiles")
+            val_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(val_errors, 0),
+                    np.percentile(val_errors, 25),
+                    np.percentile(val_errors, 50),
+                    np.percentile(val_errors, 75),
+                    np.percentile(val_errors, 100)
+                ]
+            })
+            st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+
+    with sgtab:
+        # Error distribution comparison
+        st.markdown("### 1. Error Distribution Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Errors")
+            
+            # Histogram of training errors
+            fig_train_err = go.Figure()
+            fig_train_err.add_trace(go.Histogram(
+                x=stochastic_error_stats['train']['errors'],
+                nbinsx=30,
+                name='Training Errors',
+                marker=dict(color='blue', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_train_err.update_layout(
+                title="Distribution of Training Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_train_err, width='stretch')
+            
+            # Statistics
+            train_errors = stochastic_error_stats['train']['errors']
+            st.write(f"**Mean Error:** {np.mean(train_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(train_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(train_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(train_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(train_errors):.4f}")
+            st.write(f"**Range:** {np.max(train_errors) - np.min(train_errors):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set Errors")
+            
+            # Histogram of validation errors
+            fig_val_err = go.Figure()
+            fig_val_err.add_trace(go.Histogram(
+                x=stochastic_error_stats['validation']['errors'],
+                nbinsx=30,
+                name='Validation Errors',
+                marker=dict(color='green', opacity=0.7),
+                showlegend=False
+            ))
+            
+            fig_val_err.update_layout(
+                title="Distribution of Validation Errors",
+                xaxis_title="Error (Actual - Predicted)",
+                yaxis_title="Frequency",
+                template='plotly_white',
+                height=350
+            )
+            
+            st.plotly_chart(fig_val_err, width='stretch')
+            
+            # Statistics
+            val_errors = stochastic_error_stats['validation']['errors']
+            st.write(f"**Mean Error:** {np.mean(val_errors):.4f}")
+            st.write(f"**Median Error:** {np.median(val_errors):.4f}")
+            st.write(f"**Std Dev:** {np.std(val_errors):.4f}")
+            st.write(f"**Min Error:** {np.min(val_errors):.4f}")
+            st.write(f"**Max Error:** {np.max(val_errors):.4f}")
+            st.write(f"**Range:** {np.max(val_errors) - np.min(val_errors):.4f}")
+        
+        st.divider()
+        
+        # Combined error distribution
+        st.markdown("### 2. Combined Error Distribution")
+        
+        fig_combined_err = go.Figure()
+        
+        fig_combined_err.add_trace(go.Histogram(
+            x=stochastic_error_stats['train']['errors'],
+            name='Training Errors',
+            marker=dict(color='blue', opacity=0.6),
+            nbinsx=30
+        ))
+        
+        fig_combined_err.add_trace(go.Histogram(
+            x=stochastic_error_stats['validation']['errors'],
+            name='Validation Errors',
+            marker=dict(color='green', opacity=0.6),
+            nbinsx=30
+        ))
+        
+        fig_combined_err.update_layout(
+            title="Training vs Validation Error Distribution",
+            xaxis_title="Error (Actual - Predicted)",
+            yaxis_title="Frequency",
+            barmode='overlay',
+            template='plotly_white',
+            height=400
+        )
+        
+        st.plotly_chart(fig_combined_err, width='stretch')
+        
+        st.markdown("""
+        **Interpretation:**
+        - Errors centered around zero indicate unbiased predictions
+        - Similar distributions suggest good generalization
+        - Normal (bell-shaped) distribution validates linear regression assumptions
+        """)
+        
+        st.divider()
+        
+        # Loss metrics comparison
+        st.markdown("### 3. Loss Function Metrics Comparison")
+        
+        loss_comparison = pd.DataFrame({
+            'Loss Function': ['MSE (Mean Squared Error)', 'MAE (Mean Absolute Error)', 'RMSE (Root Mean Squared Error)'],
+            'Training Set': [
+                stochastic_error_stats['train']['mse'],
+                stochastic_error_stats['train']['mae'],
+                stochastic_error_stats['train']['rmse']
+            ],
+            'Validation Set': [
+                stochastic_error_stats['validation']['mse'],
+                stochastic_error_stats['validation']['mae'],
+                stochastic_error_stats['validation']['rmse']
+            ],
+            'Formula': [
+                '(1/n) Σ(yᵢ - ŷᵢ)²',
+                '(1/n) Σ|yᵢ - ŷᵢ|',
+                '√[(1/n) Σ(yᵢ - ŷᵢ)²]'
+            ]
+        })
+        
+        loss_comparison['Absolute Difference'] = abs(loss_comparison['Validation Set'] - loss_comparison['Training Set'])
+        loss_comparison['Relative Difference (%)'] = (
+            loss_comparison['Absolute Difference'] / loss_comparison['Training Set'] * 100
+        )
+        
+        st.dataframe(loss_comparison.style.format({
+            'Training Set': '{:.6f}',
+            'Validation Set': '{:.6f}',
+            'Absolute Difference': '{:.6f}',
+            'Relative Difference (%)': '{:.2f}%'
+        }), width='stretch')
+        
+        st.markdown("""
+        **Loss Function Characteristics:**
+        
+        | Metric | Sensitivity | Units | Use Case |
+        |--------|-------------|-------|----------|
+        | **MSE** | High (squares errors) | y² | Optimization (gradient descent) |
+        | **MAE** | Medium (absolute values) | y | Robust to outliers |
+        | **RMSE** | High (squares errors) | y | Interpretable in original units |
+        """)
+        
+        st.divider()
+        
+        # Squared errors visualization
+        st.markdown("### 4. Squared Errors Visualization")
+        
+        X_train_viz = np.array(m.X_train).flatten()
+        X_val_viz = np.array(m.X_test).flatten()
+        
+        train_squared_errors = stochastic_error_stats['train']['errors'] ** 2
+        val_squared_errors = stochastic_error_stats['validation']['errors'] ** 2
+        
+        fig_squared = go.Figure()
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_train_viz,
+            y=train_squared_errors,
+            mode='markers',
+            name='Training Squared Errors',
+            marker=dict(color='blue', size=8, opacity=0.6)
+        ))
+        
+        fig_squared.add_trace(go.Scatter(
+            x=X_val_viz,
+            y=val_squared_errors,
+            mode='markers',
+            name='Validation Squared Errors',
+            marker=dict(color='green', size=8, opacity=0.6)
+        ))
+        
+        # Add mean squared error lines
+        fig_squared.add_hline(
+            y=stochastic_error_stats['train']['mse'],
+            line_dash="dash",
+            line_color="blue",
+            annotation_text=f"Train MSE: {stochastic_error_stats['train']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.add_hline(
+            y=stochastic_error_stats['validation']['mse'],
+            line_dash="dash",
+            line_color="green",
+            annotation_text=f"Val MSE: {stochastic_error_stats['validation']['mse']:.4f}",
+            annotation_position="right"
+        )
+        
+        fig_squared.update_layout(
+            title="Squared Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Squared Error (yᵢ - ŷᵢ)²",
+            template='plotly_white',
+            height=400
+        )
+        
+        st.plotly_chart(fig_squared, width='stretch')
+        
+        st.markdown("""
+        **Why Squared Errors Matter:**
+        - MSE is the average of these squared errors
+        - Larger errors are penalized more heavily (quadratic penalty)
+        - MSE is differentiable, making it suitable for gradient descent
+        - Outliers (points far from horizontal lines) contribute most to loss
+        """)
+        
+        st.divider()
+        
+        # Error percentiles
+        st.markdown("### 5. Error Percentile Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set Percentiles")
+            train_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(train_errors, 0),
+                    np.percentile(train_errors, 25),
+                    np.percentile(train_errors, 50),
+                    np.percentile(train_errors, 75),
+                    np.percentile(train_errors, 100)
+                ]
+            })
+            st.dataframe(train_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
+        
+        with col2:
+            st.markdown("#### Validation Set Percentiles")
+            val_percentiles = pd.DataFrame({
+                'Percentile': ['Min (0%)', '25th', '50th (Median)', '75th', 'Max (100%)'],
+                'Error Value': [
+                    np.percentile(val_errors, 0),
+                    np.percentile(val_errors, 25),
+                    np.percentile(val_errors, 50),
+                    np.percentile(val_errors, 75),
+                    np.percentile(val_errors, 100)
+                ]
+            })
+            st.dataframe(val_percentiles.style.format({'Error Value': '{:.4f}'}), width='stretch')
 
 with tab6:
     st.subheader("Gradient Descent Dynamics")

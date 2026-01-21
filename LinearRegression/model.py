@@ -26,16 +26,11 @@ class LinearRegression:
         self.initial_slope = self.slope
         self.initial_intercept = self.intercept
         
-        self.history = {
-            'slope': [],
-            'intercept': [],
-            'grad_slope': [],
-            'grad_intercept': [],
-            'train_loss': [],      # Track training loss
-            'val_loss': [],        # Track validation loss
-            'grad_magnitude': [],  # Track gradient magnitude
-            'param_change': []     # Track parameter change magnitude
-        }
+        self.history = self.init_history()
+
+        self.history_mini_batch = self.init_history()
+
+        self.history_stochastic = self.init_history()
 
         #empty train/test variables
         self.X_train = []
@@ -62,6 +57,19 @@ class LinearRegression:
             test_size=test_size,
             random_state=random_state
         )
+
+    def init_history(self):
+        #initializes history dictionaries
+        return {
+            'slope': [],
+            'intercept': [],
+            'grad_slope': [],
+            'grad_intercept': [],
+            'train_loss': [],      # Track training loss
+            'val_loss': [],        # Track validation loss
+            'grad_magnitude': [],  # Track gradient magnitude
+            'param_change': []     # Track parameter change magnitude
+        }
 
     def calculate_mse(self, y_true, y_pred):
         """
@@ -134,6 +142,10 @@ class LinearRegression:
         Returns:
             self (for method chaining)
         """
+
+        self.slope = self.initial_slope
+        self.intercept = self.initial_intercept
+
         if method == 'batch':
             return self.fit_batch()
         elif method == 'mini-batch':
@@ -291,14 +303,14 @@ class LinearRegression:
                                   (self.intercept - prev_intercept)**2)
             
             # Track history
-            self.history["slope"].append(self.slope)
-            self.history["intercept"].append(self.intercept)
-            self.history["grad_slope"].append(avg_grad_slope)
-            self.history["grad_intercept"].append(avg_grad_intercept)
-            self.history["train_loss"].append(train_loss)
-            self.history["val_loss"].append(val_loss)
-            self.history["grad_magnitude"].append(grad_magnitude)
-            self.history["param_change"].append(param_change)
+            self.history_mini_batch["slope"].append(self.slope)
+            self.history_mini_batch["intercept"].append(self.intercept)
+            self.history_mini_batch["grad_slope"].append(avg_grad_slope)
+            self.history_mini_batch["grad_intercept"].append(avg_grad_intercept)
+            self.history_mini_batch["train_loss"].append(train_loss)
+            self.history_mini_batch["val_loss"].append(val_loss)
+            self.history_mini_batch["grad_magnitude"].append(grad_magnitude)
+            self.history_mini_batch["param_change"].append(param_change)
         
         return self
 
@@ -378,53 +390,64 @@ class LinearRegression:
                                   (self.intercept - prev_intercept)**2)
             
             # Track history
-            self.history["slope"].append(self.slope)
-            self.history["intercept"].append(self.intercept)
-            self.history["grad_slope"].append(avg_grad_slope)
-            self.history["grad_intercept"].append(avg_grad_intercept)
-            self.history["train_loss"].append(train_loss)
-            self.history["val_loss"].append(val_loss)
-            self.history["grad_magnitude"].append(grad_magnitude)
-            self.history["param_change"].append(param_change)
+            self.history_stochastic["slope"].append(self.slope)
+            self.history_stochastic["intercept"].append(self.intercept)
+            self.history_stochastic["grad_slope"].append(avg_grad_slope)
+            self.history_stochastic["grad_intercept"].append(avg_grad_intercept)
+            self.history_stochastic["train_loss"].append(train_loss)
+            self.history_stochastic["val_loss"].append(val_loss)
+            self.history_stochastic["grad_magnitude"].append(grad_magnitude)
+            self.history_stochastic["param_change"].append(param_change)
         
         return self
     
-    def predict(self, X):
+    def predict(self, X, method="batch"):
         #makes predictions
         X = np.array(X).flatten()
-        return self.slope * X + self.intercept
+        if method == "mini-batch":
+            return self.history_mini_batch["slope"][-1] * X + self.history_mini_batch["intercept"][-1]
+        elif method == "stochastic":
+            return self.history_stochastic["slope"][-1] * X + self.history_stochastic["intercept"][-1]
+        else:
+            return self.history["slope"][-1] * X + self.history["intercept"][-1]
 
     def calc_metrics(self):
+        methods = ["batch","mini-batch","stochastic"]
+
+        all_metrics = []
+
         #uses R^2, MSE, RMSE, and MAE to evaluate the model
         X = np.array(self.X_test).flatten()
         y = np.array(self.y_test).flatten()
-
-        y_pred = self.predict(X)
         
-        #calc the metrics
-        #R^2
-        ss_res = np.sum((y - y_pred) ** 2)
-        ss_total = np.sum((y - y.mean()) ** 2)
-        r2 = 1 - (ss_res/ss_total)
+        for method in methods:
+            y_pred = self.predict(X, method=method)
 
-        #MSE
-        mse = np.mean((y - y_pred) ** 2)
+            #calc the metrics
+            #R^2
+            ss_res = np.sum((y - y_pred) ** 2)
+            ss_total = np.sum((y - y.mean()) ** 2)
+            r2 = 1 - (ss_res/ss_total)
 
-        #RMSE
-        rmse = np.sqrt(mse)
+            #MSE
+            mse = np.mean((y - y_pred) ** 2)
 
-        #MAE
-        mae = np.mean(np.abs(y - y_pred))
+            #RMSE
+            rmse = np.sqrt(mse)
 
-        return {
-            'R^2': r2,
-            'MSE': mse,
-            'RMSE': rmse,
-            'MAE': mae
-        }
+            #MAE
+            mae = np.mean(np.abs(y - y_pred))
+
+            all_metrics.append({
+                'R^2': r2,
+                'MSE': mse,
+                'RMSE': rmse,
+                'MAE': mae
+            })
+        return all_metrics[0],all_metrics[1],all_metrics[2]
     
     def get_history(self):
-        return self.history
+        return self.history,self.history_mini_batch,self.history_stochastic
     
     def get_data(self):
         return self.data
@@ -433,10 +456,16 @@ class LinearRegression:
         """
         Returns the final training and validation loss values
         """
-        if len(self.history['train_loss']) > 0:
+        if len(self.history['train_loss']) > 0 and len(self.history_mini_batch['train_loss']) > 0 and len(self.history_stochastic['train_loss']) > 0:
             return {
                 'final_train_loss': self.history['train_loss'][-1],
                 'final_val_loss': self.history['val_loss'][-1]
+            },{
+                'final_train_loss': self.history_mini_batch['train_loss'][-1],
+                'final_val_loss': self.history_mini_batch['val_loss'][-1]
+            },{
+                'final_train_loss': self.history_stochastic['train_loss'][-1],
+                'final_val_loss': self.history_stochastic['val_loss'][-1]
             }
         return None
     
@@ -451,16 +480,20 @@ class LinearRegression:
         y_train = np.array(self.y_train).flatten()
         X_val = np.array(self.X_test).flatten()
         y_val = np.array(self.y_test).flatten()
+
+        methods = ["batch","mini-batch","stochastic"]
+        error_stats = []
         
-        # Generate predictions
-        y_train_pred = self.predict(X_train)
-        y_val_pred = self.predict(X_val)
-        
-        # Calculate errors
-        train_errors = self.calculate_errors(y_train, y_train_pred)
-        val_errors = self.calculate_errors(y_val, y_val_pred)
-        
-        return {
+        for method in methods:
+            # Generate predictions
+            y_train_pred = self.predict(X_train,method=method)
+            y_val_pred = self.predict(X_val,method=method)
+            
+            # Calculate errors
+            train_errors = self.calculate_errors(y_train, y_train_pred)
+            val_errors = self.calculate_errors(y_val, y_val_pred)
+
+            error_stats.append({
             'train': {
                 'errors': train_errors,
                 'mse': self.calculate_mse(y_train, y_train_pred),
@@ -477,7 +510,9 @@ class LinearRegression:
                 'predictions': y_val_pred,
                 'actual': y_val
             }
-        }
+        })
+        
+        return error_stats[0],error_stats[1],error_stats[2]
     
     def get_initial_params(self):
         """
@@ -520,16 +555,9 @@ class LinearRegression:
         self.initial_intercept = self.intercept
         
         # Clear history
-        self.history = {
-            'slope': [],
-            'intercept': [],
-            'grad_slope': [],
-            'grad_intercept': [],
-            'train_loss': [],
-            'val_loss': [],
-            'grad_magnitude': [],
-            'param_change': []
-        }
+        self.history = self.init_history()
+        self.history_stochastic = self.init_history()
+        self.history_mini_batch = self.init_history()
     
     def compare_optimization_methods(self, methods=['batch', 'mini-batch', 'stochastic'], 
                                     batch_size=32, seed=42):
