@@ -581,3 +581,194 @@ class LinearRegression:
             self.history = results[methods[0]]['history']
         
         return results
+    
+    def compute_analytical_gradients(self, w, b):
+        """
+        Compute analytical gradients using calculus
+        
+        For MSE loss L = (1/n) * Σ(yᵢ - ŷᵢ)²:
+        ∂L/∂w = (1/n) * Σ(ŷᵢ - yᵢ) * xᵢ
+        ∂L/∂b = (1/n) * Σ(ŷᵢ - yᵢ)
+        
+        Args:
+            w: slope parameter
+            b: intercept parameter
+            
+        Returns:
+            tuple: (grad_w, grad_b)
+            """
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        n = len(X_train)
+        
+        # Forward pass
+        y_pred = w * X_train + b
+        
+        # Compute gradients
+        grad_w = (1/n) * np.sum((y_pred - y_train) * X_train)
+        grad_b = (1/n) * np.sum(y_pred - y_train)
+    
+        return grad_w, grad_b
+
+    def compute_numerical_gradients(self, w, b, epsilon=1e-7):
+        """
+        Compute numerical gradients using finite differences
+        
+        Numerical gradient approximation:
+        ∂L/∂w ≈ [L(w + ε) - L(w - ε)] / (2ε)  (central difference)
+        
+        Args:
+            w: slope parameter
+            b: intercept parameter
+            epsilon: small perturbation value
+            
+        Returns:
+            tuple: (numerical_grad_w, numerical_grad_b)
+        """
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        
+        # Compute loss at w + epsilon
+        y_pred_w_plus = (w + epsilon) * X_train + b
+        loss_w_plus = self.calculate_mse(y_train, y_pred_w_plus)
+        
+        # Compute loss at w - epsilon
+        y_pred_w_minus = (w - epsilon) * X_train + b
+        loss_w_minus = self.calculate_mse(y_train, y_pred_w_minus)
+        
+        # Numerical gradient for w (central difference)
+        numerical_grad_w = (loss_w_plus - loss_w_minus) / (2 * epsilon)
+        
+        # Compute loss at b + epsilon
+        y_pred_b_plus = w * X_train + (b + epsilon)
+        loss_b_plus = self.calculate_mse(y_train, y_pred_b_plus)
+        
+        # Compute loss at b - epsilon
+        y_pred_b_minus = w * X_train + (b - epsilon)
+        loss_b_minus = self.calculate_mse(y_train, y_pred_b_minus)
+        
+        # Numerical gradient for b (central difference)
+        numerical_grad_b = (loss_b_plus - loss_b_minus) / (2 * epsilon)
+        
+        return numerical_grad_w, numerical_grad_b
+
+    def verify_gradients(self, epsilon=1e-7):
+        """
+        Verify analytical gradients against numerical gradients
+        
+        Returns:
+            dict: comparison of analytical vs numerical gradients
+        """
+        # Use current parameters
+        w = self.slope
+        b = self.intercept
+        
+        # Compute both types of gradients
+        analytical_grad_w, analytical_grad_b = self.compute_analytical_gradients(w, b)
+        numerical_grad_w, numerical_grad_b = self.compute_numerical_gradients(w, b, epsilon)
+        
+        # Compute relative errors
+        # Relative error = |analytical - numerical| / max(|analytical|, |numerical|)
+        rel_error_w = abs(analytical_grad_w - numerical_grad_w) / max(abs(analytical_grad_w), abs(numerical_grad_w), 1e-10)
+        rel_error_b = abs(analytical_grad_b - numerical_grad_b) / max(abs(analytical_grad_b), abs(numerical_grad_b), 1e-10)
+        
+        return {
+            'analytical': {
+                'grad_w': analytical_grad_w,
+                'grad_b': analytical_grad_b
+            },
+            'numerical': {
+                'grad_w': numerical_grad_w,
+                'grad_b': numerical_grad_b
+            },
+            'absolute_difference': {
+                'grad_w': abs(analytical_grad_w - numerical_grad_w),
+                'grad_b': abs(analytical_grad_b - numerical_grad_b)
+            },
+            'relative_error': {
+                'grad_w': rel_error_w,
+                'grad_b': rel_error_b
+            },
+            'epsilon': epsilon
+        }
+    
+    def demonstrate_large_gradients(self, extreme_learning_rate=10.0, iterations=50):
+        """
+        Demonstrate the effects of large gradients through gradient explosion
+        
+        Uses an extremely high learning rate to show unstable training behavior
+        
+        Args:
+            extreme_learning_rate: very large learning rate to cause instability
+            iterations: number of iterations to run
+            
+        Returns:
+            dict: history of unstable training
+        """
+        # Store original parameters
+        original_lr = self.learning_rate
+        original_slope = self.slope
+        original_intercept = self.intercept
+        
+        # Use extreme learning rate
+        self.learning_rate = extreme_learning_rate
+        
+        # Reset to initial random parameters
+        np.random.seed(42)
+        self.slope = np.random.randn()
+        self.intercept = np.random.randn()
+        
+        # Track unstable training
+        unstable_history = {
+            'slope': [],
+            'intercept': [],
+            'grad_slope': [],
+            'grad_intercept': [],
+            'train_loss': [],
+            'grad_magnitude': [],
+            'exploded': False,
+            'explosion_iteration': None
+        }
+        
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        n = len(X_train)
+        
+        for iteration in range(iterations):
+            # Forward pass
+            y_pred = self.slope * X_train + self.intercept
+            
+            # Calculate loss
+            train_loss = self.calculate_mse(y_train, y_pred)
+            
+            # Check for explosion (NaN or very large values)
+            if np.isnan(train_loss) or np.isinf(train_loss) or train_loss > 1e10:
+                unstable_history['exploded'] = True
+                unstable_history['explosion_iteration'] = iteration + 1
+                break
+            
+            # Compute gradients
+            grad_slope = (1/n) * np.sum((y_pred - y_train) * X_train)
+            grad_intercept = (1/n) * np.sum(y_pred - y_train)
+            
+            # Calculate gradient magnitude
+            grad_magnitude = np.sqrt(grad_slope**2 + grad_intercept**2)
+            
+            # Store values
+            unstable_history['slope'].append(self.slope)
+            unstable_history['intercept'].append(self.intercept)
+            unstable_history['grad_slope'].append(grad_slope)
+            unstable_history['grad_intercept'].append(grad_intercept)
+            unstable_history['train_loss'].append(train_loss)
+            unstable_history['grad_magnitude'].append(grad_magnitude)
+            
+            # Update parameters
+            self.slope = self.slope - self.learning_rate * grad_slope
+            self.intercept = self.intercept - self.learning_rate * grad_intercept
+        
+        # Restore original parameters
+        self.learning_rate = original_lr
+        self.slope = original_slope
+        self.intercept = original_intercept
+        
+        return unstable_history

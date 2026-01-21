@@ -1295,7 +1295,7 @@ with tab7:
         - If max(xᵢ²) = 100
         - Then α should be < 0.01 for guaranteed convergence
         - Your learning rate of {learning_rate} is {('safe' if learning_rate < 0.01 else 'potentially unstable')}
-        """.format(learning_rate=learning_rate))
+        """)
 
 # Rest of tabs remain unchanged...
     st.subheader("Before vs After Training Comparison")
