@@ -123,12 +123,39 @@ class LinearRegression:
         """
         return np.sqrt(self.calculate_mse(y_true, y_pred))
 
-    #want to rename to fit_grad_descent
-    def fit(self):
+    def fit(self, method='batch', batch_size=32):
         """
-        Implements gradient descent to train the model
-        Tracks both training and validation loss at each iteration
-        Also tracks gradient magnitudes and parameter changes
+        Main training method that calls the appropriate gradient descent variant
+        
+        Args:
+            method: 'batch', 'mini-batch', or 'stochastic'
+            batch_size: size of mini-batches (only used for mini-batch method)
+        
+        Returns:
+            self (for method chaining)
+        """
+        if method == 'batch':
+            return self.fit_batch()
+        elif method == 'mini-batch':
+            return self.fit_mini_batch(batch_size)
+        elif method == 'stochastic':
+            return self.fit_stochastic_grad()
+        else:
+            raise ValueError(f"Unknown method: {method}. Use 'batch', 'mini-batch', or 'stochastic'")
+
+    def fit_batch(self):
+        """
+        Batch Gradient Descent: Uses ALL training data in each iteration
+        
+        Advantages:
+        - Stable, smooth convergence
+        - Guaranteed to converge to global minimum (for convex problems)
+        - Less noisy gradient estimates
+        
+        Disadvantages:
+        - Slow for large datasets
+        - May get stuck in local minima (for non-convex problems)
+        - Requires loading entire dataset into memory
         """
         X_train = np.array(self.X_train).flatten()
         y_train = np.array(self.y_train).flatten()
@@ -142,7 +169,7 @@ class LinearRegression:
             prev_slope = self.slope
             prev_intercept = self.intercept
             
-            # Forward pass: make predictions
+            # Forward pass: make predictions on ALL data
             y_pred_train = self.slope * X_train + self.intercept
             
             # Calculate loss on training set
@@ -152,7 +179,7 @@ class LinearRegression:
             y_pred_val = self.slope * X_val + self.intercept
             val_loss = self.calculate_mse(y_val, y_pred_val)
             
-            # Compute gradients (corrected - using n instead of iteration)
+            # Compute gradients using ALL training data
             grad_slope = (1/n) * np.sum((y_pred_train - y_train) * X_train)
             grad_intercept = (1/n) * np.sum(y_pred_train - y_train)
             
@@ -179,14 +206,188 @@ class LinearRegression:
         
         return self
 
-    def fit_batch(self):
-        pass
+    def fit_mini_batch(self, batch_size=32):
+        """
+        Mini-Batch Gradient Descent: Uses small batches of data in each iteration
+        
+        Advantages:
+        - Balances speed and stability
+        - More memory efficient than batch GD
+        - Can escape shallow local minima
+        - Leverages vectorization for efficiency
+        
+        Disadvantages:
+        - Introduces some noise (less than SGD)
+        - Requires tuning batch size hyperparameter
+        - May oscillate near minimum
+        
+        Args:
+            batch_size: number of samples per mini-batch (default: 32)
+        """
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        X_val = np.array(self.X_test).flatten()
+        y_val = np.array(self.y_test).flatten()
+        
+        n = len(X_train)
+        
+        # Ensure batch_size doesn't exceed dataset size
+        batch_size = min(batch_size, n)
 
-    def fit_mini_batch(self):
-        pass
+        for iteration in range(1, self.n_iterations + 1):
+            # Store previous parameters
+            prev_slope = self.slope
+            prev_intercept = self.intercept
+            
+            # Shuffle data at the start of each epoch
+            indices = np.random.permutation(n)
+            X_shuffled = X_train[indices]
+            y_shuffled = y_train[indices]
+            
+            # Process mini-batches
+            num_batches = n // batch_size
+            
+            # Accumulate gradients across all mini-batches in this iteration
+            total_grad_slope = 0
+            total_grad_intercept = 0
+            
+            for batch_idx in range(num_batches):
+                start_idx = batch_idx * batch_size
+                end_idx = start_idx + batch_size
+                
+                X_batch = X_shuffled[start_idx:end_idx]
+                y_batch = y_shuffled[start_idx:end_idx]
+                
+                # Forward pass on mini-batch
+                y_pred_batch = self.slope * X_batch + self.intercept
+                
+                # Compute gradients for this mini-batch
+                batch_grad_slope = (1/batch_size) * np.sum((y_pred_batch - y_batch) * X_batch)
+                batch_grad_intercept = (1/batch_size) * np.sum(y_pred_batch - y_batch)
+                
+                # Update parameters after each mini-batch
+                self.slope = self.slope - self.learning_rate * batch_grad_slope
+                self.intercept = self.intercept - self.learning_rate * batch_grad_intercept
+                
+                total_grad_slope += batch_grad_slope
+                total_grad_intercept += batch_grad_intercept
+            
+            # Average gradients across all mini-batches for tracking
+            avg_grad_slope = total_grad_slope / num_batches
+            avg_grad_intercept = total_grad_intercept / num_batches
+            
+            # Calculate full training and validation loss (for tracking only)
+            y_pred_train = self.slope * X_train + self.intercept
+            train_loss = self.calculate_mse(y_train, y_pred_train)
+            
+            y_pred_val = self.slope * X_val + self.intercept
+            val_loss = self.calculate_mse(y_val, y_pred_val)
+            
+            # Calculate gradient magnitude
+            grad_magnitude = np.sqrt(avg_grad_slope**2 + avg_grad_intercept**2)
+            
+            # Calculate parameter change
+            param_change = np.sqrt((self.slope - prev_slope)**2 + 
+                                  (self.intercept - prev_intercept)**2)
+            
+            # Track history
+            self.history["slope"].append(self.slope)
+            self.history["intercept"].append(self.intercept)
+            self.history["grad_slope"].append(avg_grad_slope)
+            self.history["grad_intercept"].append(avg_grad_intercept)
+            self.history["train_loss"].append(train_loss)
+            self.history["val_loss"].append(val_loss)
+            self.history["grad_magnitude"].append(grad_magnitude)
+            self.history["param_change"].append(param_change)
+        
+        return self
 
     def fit_stochastic_grad(self):
-        pass
+        """
+        Stochastic Gradient Descent (SGD): Uses ONE sample at a time
+        
+        Advantages:
+        - Very fast updates (one sample per update)
+        - Can escape local minima due to noise
+        - Online learning capable
+        - Memory efficient
+        
+        Disadvantages:
+        - Very noisy gradient estimates
+        - May never fully converge (oscillates near minimum)
+        - Slower convergence overall despite fast updates
+        - Requires careful learning rate tuning
+        """
+        X_train = np.array(self.X_train).flatten()
+        y_train = np.array(self.y_train).flatten()
+        X_val = np.array(self.X_test).flatten()
+        y_val = np.array(self.y_test).flatten()
+        
+        n = len(X_train)
+        
+        # In SGD, we typically do multiple passes through the data
+        # Each iteration = one epoch (pass through all data)
+        for iteration in range(1, self.n_iterations + 1):
+            # Store previous parameters
+            prev_slope = self.slope
+            prev_intercept = self.intercept
+            
+            # Shuffle data at the start of each epoch
+            indices = np.random.permutation(n)
+            
+            # Accumulate gradients for tracking purposes
+            epoch_grad_slopes = []
+            epoch_grad_intercepts = []
+            
+            # Process each sample individually
+            for idx in indices:
+                x_sample = X_train[idx]
+                y_sample = y_train[idx]
+                
+                # Forward pass on single sample
+                y_pred_sample = self.slope * x_sample + self.intercept
+                
+                # Compute gradient for this single sample
+                # Note: No division by n since we're using one sample
+                grad_slope = (y_pred_sample - y_sample) * x_sample
+                grad_intercept = (y_pred_sample - y_sample)
+                
+                # Update parameters immediately after each sample
+                self.slope = self.slope - self.learning_rate * grad_slope
+                self.intercept = self.intercept - self.learning_rate * grad_intercept
+                
+                epoch_grad_slopes.append(grad_slope)
+                epoch_grad_intercepts.append(grad_intercept)
+            
+            # Average gradients across epoch for tracking
+            avg_grad_slope = np.mean(epoch_grad_slopes)
+            avg_grad_intercept = np.mean(epoch_grad_intercepts)
+            
+            # Calculate full training and validation loss (for tracking only)
+            y_pred_train = self.slope * X_train + self.intercept
+            train_loss = self.calculate_mse(y_train, y_pred_train)
+            
+            y_pred_val = self.slope * X_val + self.intercept
+            val_loss = self.calculate_mse(y_val, y_pred_val)
+            
+            # Calculate gradient magnitude
+            grad_magnitude = np.sqrt(avg_grad_slope**2 + avg_grad_intercept**2)
+            
+            # Calculate parameter change
+            param_change = np.sqrt((self.slope - prev_slope)**2 + 
+                                  (self.intercept - prev_intercept)**2)
+            
+            # Track history
+            self.history["slope"].append(self.slope)
+            self.history["intercept"].append(self.intercept)
+            self.history["grad_slope"].append(avg_grad_slope)
+            self.history["grad_intercept"].append(avg_grad_intercept)
+            self.history["train_loss"].append(train_loss)
+            self.history["val_loss"].append(val_loss)
+            self.history["grad_magnitude"].append(grad_magnitude)
+            self.history["param_change"].append(param_change)
+        
+        return self
     
     def predict(self, X):
         #makes predictions
@@ -302,3 +503,81 @@ class LinearRegression:
         """
         X = np.array(X).flatten()
         return slope * X + intercept
+    
+    def reset_parameters(self, random_seed=None):
+        """
+        Reset parameters to initial random values for fair comparison
+        
+        Args:
+            random_seed: seed for reproducibility
+        """
+        if random_seed is not None:
+            np.random.seed(random_seed)
+        
+        self.slope = np.random.randn()
+        self.intercept = np.random.randn()
+        self.initial_slope = self.slope
+        self.initial_intercept = self.intercept
+        
+        # Clear history
+        self.history = {
+            'slope': [],
+            'intercept': [],
+            'grad_slope': [],
+            'grad_intercept': [],
+            'train_loss': [],
+            'val_loss': [],
+            'grad_magnitude': [],
+            'param_change': []
+        }
+    
+    def compare_optimization_methods(self, methods=['batch', 'mini-batch', 'stochastic'], 
+                                    batch_size=32, seed=42):
+        """
+        Compare different optimization methods starting from same initial parameters
+        
+        Args:
+            methods: list of methods to compare
+            batch_size: batch size for mini-batch method
+            seed: random seed for reproducibility
+            
+        Returns:
+            dict: results for each method
+        """
+        results = {}
+        
+        # Store original parameters
+        original_slope = self.slope
+        original_intercept = self.intercept
+        original_lr = self.learning_rate
+        original_iters = self.n_iterations
+        
+        for method in methods:
+            # Reset to same initial parameters
+            self.reset_parameters(seed)
+            
+            # Train with this method
+            if method == 'batch':
+                self.fit_batch()
+            elif method == 'mini-batch':
+                self.fit_mini_batch(batch_size)
+            elif method == 'stochastic':
+                self.fit_stochastic_grad()
+            
+            # Store results
+            results[method] = {
+                'history': self.get_history().copy(),
+                'final_slope': self.slope,
+                'final_intercept': self.intercept,
+                'final_train_loss': self.history['train_loss'][-1],
+                'final_val_loss': self.history['val_loss'][-1],
+                'metrics': self.calc_metrics()
+            }
+        
+        # Restore original state (use first method's result)
+        if methods:
+            self.slope = results[methods[0]]['final_slope']
+            self.intercept = results[methods[0]]['final_intercept']
+            self.history = results[methods[0]]['history']
+        
+        return results
