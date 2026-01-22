@@ -1,6 +1,15 @@
 # Linear Regression and Differentiation Essentials
 
-## Part 1
+## TOC
+
+- [Differentiation](#differentiation)
+- [The Code](#the-code)
+    - [Repository](https://github.com/ntadhere/CLC-AIT204)
+    - [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)
+- [Ethical Considerations](#ethical-considerations)
+
+## Differentiation
+
 ### 1. Interpret $\frac{dy}{dx}$ geometrically
 - This is the slope of the tangent line to the curve $y=f(x)$ at a point $x=a$ 
 - It represents the instantaneous rate of change of $y$ with respect to $x$
@@ -22,34 +31,49 @@ $$
 ### 2. How many differentiation formulas do we have and what are they?
 
 1. Constant Rule: 
+
 $$
 \frac{d}{dx}(c) = 0 
 $$
+
 2. Power Rule:
+
 $$
 \frac{d}{dx}(x^n) = n x^{\,n-1} \quad \text{(real } n \text{, where defined)} 
 $$
+
 3. Constant Multiple Rule: 
+
 $$ 
 \frac{d}{dx}(cf) = c f' 
 $$
+
 4. Sum/Differrence Rule: 
+
 $$
 \frac{d}{dx}(f \pm g) = f' \pm g'
 $$
+
 5. Product Rule: 
+
 $$
 (fg)' = f'g + fg'
 $$
+
 6. Quotient Rule: 
+
 $$
 \frac{d}{dx}\bigl(f(g(x))\bigr) = f'(g(x))\,g'(x)
 $$
+
 7. Chain Rule: 
+
 $$
 \frac{d}{dx}\bigl(f(g(x))\bigr) = f'(g(x))\,g'(x)
 $$
+
 8.  Exponential Rule:
+
 $$
 \frac{d}{dx}(e^x) = e^x
 $$
@@ -57,7 +81,9 @@ $$
 $$
 \frac{d}{dx}(a^x) = a^x \ln a
 $$
+
 9. Logarithmic Rule:
+
 $$
 \frac{d}{dx}(\ln x) = \frac{1}{x}
 $$
@@ -65,7 +91,9 @@ $$
 $$
 \frac{d}{dx}(\log_a x) = \frac{1}{x \ln a}
 $$
+
 10. Trigonometric Fuctions:
+
 $$
 (\sin x)' = \cos x
 $$
@@ -241,5 +269,34 @@ $$
 \frac{\partial z}{\partial y} = x e^{x^2 + xy}
 $$
 
+---
 
-## Part 2
+## The Code
+
+We made a [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/) that allows the user to view a linear regression model based on a synthetic data set. The user is able to change the learning rate and the number of iterations and then see how those changes affect the model.
+
+### [Code Repository](https://github.com/ntadhere/CLC-AIT204)
+
+### [Streamlit Site](https://linearregressionhaloassignment-hfnxminqr7hqysabpz9mwv.streamlit.app/)
+
+## Ethical Considerations
+
+### 1. Bias in Data Generation and Model Fairness
+
+Bias can be introduced at multiple stages of data generation and collection. If the dataset underrepresents certain groups or reflects historical inequalities, the model may systematically perform worse for those populations. Synthetic or simulated data can also embed designer assumptions that unintentionally favor particular outcomes. This can lead to unfair predictions, disparate error rates, or reinforcement of existing social biases. Addressing this requires examining data sources, understanding who or what is excluded, and evaluating model performance across relevant subgroups rather than relying solely on aggregate metrics.
+
+### 2. Data Privacy and Use of Real-World Data
+
+When real-world data is used, especially data involving individuals, there is a risk of violating privacy through improper collection, storage, or use. Even anonymized datasets can sometimes be re-identified when combined with other information. Ethical practice includes minimizing the amount of personal data collected, removing direct identifiers, securing data storage, and ensuring compliance with relevant legal and institutional guidelines. Consent and clarity about how data will be used are also central considerations.
+
+### 3. Model Transparency and Explainability
+
+Models that operate as “black boxes” can make it difficult to understand why certain predictions are produced. This lack of transparency can undermine trust and make it harder to identify errors, biases, or inappropriate behavior. Explainability is especially important when model outputs influence decisions that affect people. Using interpretable models when possible, or applying explanation techniques to more complex models, helps stakeholders assess whether the model’s behavior aligns with domain knowledge and ethical expectations.
+
+### 4. Responsible Use and Societal Impact
+
+Models should be applied in ways that provide clear benefits while minimizing potential harm. This includes considering the context in which predictions are used and avoiding deployment in high-stakes settings without sufficient validation. Ethical responsibility also involves anticipating misuse, such as over-reliance on automated predictions or application outside the model’s intended scope. Framing model outputs as decision-support tools rather than definitive judgments helps maintain appropriate human oversight.
+
+### 5. Mitigating Harm from Prediction Errors
+
+No model is perfectly accurate, and errors can have real consequences depending on the application. False positives and false negatives may affect different groups in different ways. Ethical model design involves understanding which types of errors are most harmful, setting thresholds accordingly, and clearly communicating uncertainty. Regular monitoring, retraining, and fallback mechanisms can reduce the long-term impact of incorrect predictions.
