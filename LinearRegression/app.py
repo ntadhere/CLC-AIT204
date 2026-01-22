@@ -2548,36 +2548,105 @@ with tab3:
 
 with tab4:
     st.subheader("Parameter Evolution During Training")
+
+    btab,mbtab,sgtab = st.tabs([
+        "Batch",
+        "Mini-Batch",
+        "Stochastic"
+    ])
     
-    fig_params = go.Figure()
-    
-    # Plot slope evolution
-    fig_params.add_trace(go.Scatter(
-        x=iterations,
-        y=history['slope'],
-        mode='lines',
-        name='Slope (w)',
-        line=dict(color='green', width=2)
-    ))
-    
-    # Plot intercept evolution
-    fig_params.add_trace(go.Scatter(
-        x=iterations,
-        y=history['intercept'],
-        mode='lines',
-        name='Intercept (b)',
-        line=dict(color='purple', width=2)
-    ))
-    
-    fig_params.update_layout(
-        title="Parameter Values Over Iterations",
-        xaxis_title="Iteration",
-        yaxis_title="Parameter Value",
-        hovermode='x unified',
-        template='plotly_white'
-    )
-    
-    st.plotly_chart(fig_params, width='stretch')
+    with btab:
+        fig_params = go.Figure()
+        
+        # Plot slope evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=history['slope'],
+            mode='lines',
+            name='Slope (w)',
+            line=dict(color='green', width=2)
+        ))
+        
+        # Plot intercept evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=history['intercept'],
+            mode='lines',
+            name='Intercept (b)',
+            line=dict(color='purple', width=2)
+        ))
+        
+        fig_params.update_layout(
+            title="Parameter Values Over Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Parameter Value",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_params, width='stretch')
+
+    with mbtab:
+        fig_params = go.Figure()
+        
+        # Plot slope evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=mini_batch_history['slope'],
+            mode='lines',
+            name='Slope (w)',
+            line=dict(color='green', width=2)
+        ))
+        
+        # Plot intercept evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=mini_batch_history['intercept'],
+            mode='lines',
+            name='Intercept (b)',
+            line=dict(color='purple', width=2)
+        ))
+        
+        fig_params.update_layout(
+            title="Parameter Values Over Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Parameter Value",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_params, width='stretch')
+
+    with sgtab:
+        fig_params = go.Figure()
+        
+        # Plot slope evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=stochastic_history['slope'],
+            mode='lines',
+            name='Slope (w)',
+            line=dict(color='green', width=2)
+        ))
+        
+        # Plot intercept evolution
+        fig_params.add_trace(go.Scatter(
+            x=iterations,
+            y=stochastic_history['intercept'],
+            mode='lines',
+            name='Intercept (b)',
+            line=dict(color='purple', width=2)
+        ))
+        
+        fig_params.update_layout(
+            title="Parameter Values Over Iterations",
+            xaxis_title="Iteration",
+            yaxis_title="Parameter Value",
+            hovermode='x unified',
+            template='plotly_white'
+        )
+        
+        st.plotly_chart(fig_params, width='stretch')
 
 # Model Evaluation
 st.header("4️⃣ Model Evaluation Metrics")
