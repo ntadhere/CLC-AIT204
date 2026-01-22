@@ -152,6 +152,9 @@ st.write("Number of Iterations:", n_iterations)
 with st.spinner("Training model..."):
     m.fit().fit(method="mini-batch").fit(method="stochastic")
 
+result = m.calc_metrics()
+st.write(type(result), result)
+
 metrics, mini_batch_metrics, stochastic_metrics = m.calc_metrics()
 history, mini_batch_history, stochastic_history = m.get_history()
 
