@@ -1148,7 +1148,7 @@ with tab6:
     iterations = list(range(1, n_iterations + 1))
     
     # 1. Gradient Evolution Over Time
-    st.markdown("### 1. Gradient Values Over Iterations")
+    st.markdown("### 1. Gradient Values Over Iterations (Batch)")
     
     fig_grad_evolution = go.Figure()
     
@@ -2004,188 +2004,547 @@ with tab7:
 
 with tab3:
     st.subheader("Predicted vs Actual Values Analysis")
+
+    btab,mbtab,sgtab = st.tabs([
+        "Batch",
+        "Mini-Batch",
+        "Stochastic"
+    ])
     
     # Get training and validation data
     X_train = np.array(m.X_train).flatten()
     y_train = np.array(m.y_train).flatten()
     X_val = np.array(m.X_test).flatten()
     y_val = np.array(m.y_test).flatten()
-    
-    # Generate predictions
-    y_train_pred = m.predict(X_train)
-    y_val_pred = m.predict(X_val)
-    
-    # Create two columns for train and validation plots
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Training Set")
+
+    with btab:
+        # Generate predictions
+        y_train_pred = m.predict(X_train,method="batch")
+        y_val_pred = m.predict(X_val,method="batch")
         
-        # Scatter plot: Predicted vs Actual
-        fig_train = go.Figure()
+        # Create two columns for train and validation plots
+        col1, col2 = st.columns(2)
         
-        # Add scatter points
-        fig_train.add_trace(go.Scatter(
-            x=y_train,
-            y=y_train_pred,
+        with col1:
+            st.markdown("#### Training Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_train = go.Figure()
+            
+            # Add scatter points
+            fig_train.add_trace(go.Scatter(
+                x=y_train,
+                y=y_train_pred,
+                mode='markers',
+                name='Training Data',
+                marker=dict(color='blue', size=8, opacity=0.6),
+                text=[f'Actual: {y_train[i]:.2f}<br>Predicted: {y_train_pred[i]:.2f}<br>Error: {y_train[i]-y_train_pred[i]:.2f}' 
+                    for i in range(len(y_train))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_train.min(), y_train_pred.min())
+            max_val = max(y_train.max(), y_train_pred.max())
+            fig_train.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_train.update_layout(
+                title="Training Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_train, width='stretch')
+            
+            # Training set statistics
+            train_residuals = y_train - y_train_pred
+            st.write(f"**Training MSE:** {np.mean(train_residuals**2):.4f}")
+            st.write(f"**Training MAE:** {np.mean(np.abs(train_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(train_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(train_residuals):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_val = go.Figure()
+            
+            # Add scatter points
+            fig_val.add_trace(go.Scatter(
+                x=y_val,
+                y=y_val_pred,
+                mode='markers',
+                name='Validation Data',
+                marker=dict(color='green', size=8, opacity=0.6),
+                text=[f'Actual: {y_val[i]:.2f}<br>Predicted: {y_val_pred[i]:.2f}<br>Error: {y_val[i]-y_val_pred[i]:.2f}' 
+                    for i in range(len(y_val))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_val.min(), y_val_pred.min())
+            max_val = max(y_val.max(), y_val_pred.max())
+            fig_val.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_val.update_layout(
+                title="Validation Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_val, width='stretch')
+            
+            # Validation set statistics
+            val_residuals = y_val - y_val_pred
+            st.write(f"**Validation MSE:** {np.mean(val_residuals**2):.4f}")
+            st.write(f"**Validation MAE:** {np.mean(np.abs(val_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(val_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(val_residuals):.4f}")
+        
+        st.divider()
+        
+        # Combined residual plot
+        st.markdown("#### Residual Analysis")
+        
+        fig_residuals = go.Figure()
+        
+        # Training residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_train,
+            y=train_residuals,
             mode='markers',
-            name='Training Data',
-            marker=dict(color='blue', size=8, opacity=0.6),
-            text=[f'Actual: {y_train[i]:.2f}<br>Predicted: {y_train_pred[i]:.2f}<br>Error: {y_train[i]-y_train_pred[i]:.2f}' 
-                  for i in range(len(y_train))],
-            hovertemplate='%{text}<extra></extra>'
+            name='Training Residuals',
+            marker=dict(color='blue', size=6, opacity=0.6)
         ))
         
-        # Add perfect prediction line (y = x)
-        min_val = min(y_train.min(), y_train_pred.min())
-        max_val = max(y_train.max(), y_train_pred.max())
-        fig_train.add_trace(go.Scatter(
-            x=[min_val, max_val],
-            y=[min_val, max_val],
-            mode='lines',
-            name='Perfect Prediction',
-            line=dict(color='red', width=2, dash='dash')
+        # Validation residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_val,
+            y=val_residuals,
+            mode='markers',
+            name='Validation Residuals',
+            marker=dict(color='green', size=6, opacity=0.6)
         ))
         
-        fig_train.update_layout(
-            title="Training Set: Predicted vs Actual",
-            xaxis_title="Actual Values",
-            yaxis_title="Predicted Values",
+        # Zero line
+        fig_residuals.add_hline(y=0, line_dash="dash", line_color="red", 
+                                annotation_text="Zero Error Line")
+        
+        fig_residuals.update_layout(
+            title="Residual Plot: Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Residuals (Actual - Predicted)",
             template='plotly_white',
             showlegend=True,
             height=400
         )
         
-        st.plotly_chart(fig_train, width='stretch')
+        st.plotly_chart(fig_residuals, width='stretch')
         
-        # Training set statistics
-        train_residuals = y_train - y_train_pred
-        st.write(f"**Training MSE:** {np.mean(train_residuals**2):.4f}")
-        st.write(f"**Training MAE:** {np.mean(np.abs(train_residuals)):.4f}")
-        st.write(f"**Mean Residual:** {np.mean(train_residuals):.4f}")
-        st.write(f"**Std Residual:** {np.std(train_residuals):.4f}")
-    
-    with col2:
-        st.markdown("#### Validation Set")
+        st.markdown("""
+        **Interpretation Guide:**
+        - **Points on red diagonal line** = Perfect predictions (actual = predicted)
+        - **Points above the line** = Model underpredicts (actual > predicted)
+        - **Points below the line** = Model overpredicts (actual < predicted)
+        - **Residuals near zero** = Good predictions
+        - **Random scatter in residuals** = Good model fit (no pattern means no systematic bias)
+        - **Pattern in residuals** = Model is missing something (non-linear relationship, etc.)
+        """)
         
-        # Scatter plot: Predicted vs Actual
-        fig_val = go.Figure()
+        # Statistical comparison
+        st.markdown("#### Train vs Validation Comparison")
+        comparison_metrics = pd.DataFrame({
+            'Metric': ['MSE', 'MAE', 'Mean Residual', 'Std Residual'],
+            'Training Set': [
+                np.mean(train_residuals**2),
+                np.mean(np.abs(train_residuals)),
+                np.mean(train_residuals),
+                np.std(train_residuals)
+            ],
+            'Validation Set': [
+                np.mean(val_residuals**2),
+                np.mean(np.abs(val_residuals)),
+                np.mean(val_residuals),
+                np.std(val_residuals)
+            ]
+        })
+        comparison_metrics['Difference'] = comparison_metrics['Validation Set'] - comparison_metrics['Training Set']
         
-        # Add scatter points
-        fig_val.add_trace(go.Scatter(
-            x=y_val,
-            y=y_val_pred,
+        st.dataframe(comparison_metrics.style.format({
+            'Training Set': '{:.4f}',
+            'Validation Set': '{:.4f}',
+            'Difference': '{:.4f}'
+        }), width='stretch')
+
+    with mbtab:# Generate predictions
+        y_train_pred = m.predict(X_train,method="mini-batch")
+        y_val_pred = m.predict(X_val,method="mini-batch")
+        
+        # Create two columns for train and validation plots
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_train = go.Figure()
+            
+            # Add scatter points
+            fig_train.add_trace(go.Scatter(
+                x=y_train,
+                y=y_train_pred,
+                mode='markers',
+                name='Training Data',
+                marker=dict(color='blue', size=8, opacity=0.6),
+                text=[f'Actual: {y_train[i]:.2f}<br>Predicted: {y_train_pred[i]:.2f}<br>Error: {y_train[i]-y_train_pred[i]:.2f}' 
+                    for i in range(len(y_train))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_train.min(), y_train_pred.min())
+            max_val = max(y_train.max(), y_train_pred.max())
+            fig_train.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_train.update_layout(
+                title="Training Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_train, width='stretch')
+            
+            # Training set statistics
+            train_residuals = y_train - y_train_pred
+            st.write(f"**Training MSE:** {np.mean(train_residuals**2):.4f}")
+            st.write(f"**Training MAE:** {np.mean(np.abs(train_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(train_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(train_residuals):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_val = go.Figure()
+            
+            # Add scatter points
+            fig_val.add_trace(go.Scatter(
+                x=y_val,
+                y=y_val_pred,
+                mode='markers',
+                name='Validation Data',
+                marker=dict(color='green', size=8, opacity=0.6),
+                text=[f'Actual: {y_val[i]:.2f}<br>Predicted: {y_val_pred[i]:.2f}<br>Error: {y_val[i]-y_val_pred[i]:.2f}' 
+                    for i in range(len(y_val))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_val.min(), y_val_pred.min())
+            max_val = max(y_val.max(), y_val_pred.max())
+            fig_val.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_val.update_layout(
+                title="Validation Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_val, width='stretch')
+            
+            # Validation set statistics
+            val_residuals = y_val - y_val_pred
+            st.write(f"**Validation MSE:** {np.mean(val_residuals**2):.4f}")
+            st.write(f"**Validation MAE:** {np.mean(np.abs(val_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(val_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(val_residuals):.4f}")
+        
+        st.divider()
+        
+        # Combined residual plot
+        st.markdown("#### Residual Analysis")
+        
+        fig_residuals = go.Figure()
+        
+        # Training residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_train,
+            y=train_residuals,
             mode='markers',
-            name='Validation Data',
-            marker=dict(color='green', size=8, opacity=0.6),
-            text=[f'Actual: {y_val[i]:.2f}<br>Predicted: {y_val_pred[i]:.2f}<br>Error: {y_val[i]-y_val_pred[i]:.2f}' 
-                  for i in range(len(y_val))],
-            hovertemplate='%{text}<extra></extra>'
+            name='Training Residuals',
+            marker=dict(color='blue', size=6, opacity=0.6)
         ))
         
-        # Add perfect prediction line (y = x)
-        min_val = min(y_val.min(), y_val_pred.min())
-        max_val = max(y_val.max(), y_val_pred.max())
-        fig_val.add_trace(go.Scatter(
-            x=[min_val, max_val],
-            y=[min_val, max_val],
-            mode='lines',
-            name='Perfect Prediction',
-            line=dict(color='red', width=2, dash='dash')
+        # Validation residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_val,
+            y=val_residuals,
+            mode='markers',
+            name='Validation Residuals',
+            marker=dict(color='green', size=6, opacity=0.6)
         ))
         
-        fig_val.update_layout(
-            title="Validation Set: Predicted vs Actual",
-            xaxis_title="Actual Values",
-            yaxis_title="Predicted Values",
+        # Zero line
+        fig_residuals.add_hline(y=0, line_dash="dash", line_color="red", 
+                                annotation_text="Zero Error Line")
+        
+        fig_residuals.update_layout(
+            title="Residual Plot: Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Residuals (Actual - Predicted)",
             template='plotly_white',
             showlegend=True,
             height=400
         )
         
-        st.plotly_chart(fig_val, width='stretch')
+        st.plotly_chart(fig_residuals, width='stretch')
         
-        # Validation set statistics
-        val_residuals = y_val - y_val_pred
-        st.write(f"**Validation MSE:** {np.mean(val_residuals**2):.4f}")
-        st.write(f"**Validation MAE:** {np.mean(np.abs(val_residuals)):.4f}")
-        st.write(f"**Mean Residual:** {np.mean(val_residuals):.4f}")
-        st.write(f"**Std Residual:** {np.std(val_residuals):.4f}")
-    
-    st.divider()
-    
-    # Combined residual plot
-    st.markdown("#### Residual Analysis")
-    
-    fig_residuals = go.Figure()
-    
-    # Training residuals
-    fig_residuals.add_trace(go.Scatter(
-        x=X_train,
-        y=train_residuals,
-        mode='markers',
-        name='Training Residuals',
-        marker=dict(color='blue', size=6, opacity=0.6)
-    ))
-    
-    # Validation residuals
-    fig_residuals.add_trace(go.Scatter(
-        x=X_val,
-        y=val_residuals,
-        mode='markers',
-        name='Validation Residuals',
-        marker=dict(color='green', size=6, opacity=0.6)
-    ))
-    
-    # Zero line
-    fig_residuals.add_hline(y=0, line_dash="dash", line_color="red", 
-                            annotation_text="Zero Error Line")
-    
-    fig_residuals.update_layout(
-        title="Residual Plot: Errors vs Input Values",
-        xaxis_title="X (Input Values)",
-        yaxis_title="Residuals (Actual - Predicted)",
-        template='plotly_white',
-        showlegend=True,
-        height=400
-    )
-    
-    st.plotly_chart(fig_residuals, width='stretch')
-    
-    st.markdown("""
-    **Interpretation Guide:**
-    - **Points on red diagonal line** = Perfect predictions (actual = predicted)
-    - **Points above the line** = Model underpredicts (actual > predicted)
-    - **Points below the line** = Model overpredicts (actual < predicted)
-    - **Residuals near zero** = Good predictions
-    - **Random scatter in residuals** = Good model fit (no pattern means no systematic bias)
-    - **Pattern in residuals** = Model is missing something (non-linear relationship, etc.)
-    """)
-    
-    # Statistical comparison
-    st.markdown("#### Train vs Validation Comparison")
-    comparison_metrics = pd.DataFrame({
-        'Metric': ['MSE', 'MAE', 'Mean Residual', 'Std Residual'],
-        'Training Set': [
-            np.mean(train_residuals**2),
-            np.mean(np.abs(train_residuals)),
-            np.mean(train_residuals),
-            np.std(train_residuals)
-        ],
-        'Validation Set': [
-            np.mean(val_residuals**2),
-            np.mean(np.abs(val_residuals)),
-            np.mean(val_residuals),
-            np.std(val_residuals)
-        ]
-    })
-    comparison_metrics['Difference'] = comparison_metrics['Validation Set'] - comparison_metrics['Training Set']
-    
-    st.dataframe(comparison_metrics.style.format({
-        'Training Set': '{:.4f}',
-        'Validation Set': '{:.4f}',
-        'Difference': '{:.4f}'
-    }), width='stretch')
+        st.markdown("""
+        **Interpretation Guide:**
+        - **Points on red diagonal line** = Perfect predictions (actual = predicted)
+        - **Points above the line** = Model underpredicts (actual > predicted)
+        - **Points below the line** = Model overpredicts (actual < predicted)
+        - **Residuals near zero** = Good predictions
+        - **Random scatter in residuals** = Good model fit (no pattern means no systematic bias)
+        - **Pattern in residuals** = Model is missing something (non-linear relationship, etc.)
+        """)
+        
+        # Statistical comparison
+        st.markdown("#### Train vs Validation Comparison")
+        comparison_metrics = pd.DataFrame({
+            'Metric': ['MSE', 'MAE', 'Mean Residual', 'Std Residual'],
+            'Training Set': [
+                np.mean(train_residuals**2),
+                np.mean(np.abs(train_residuals)),
+                np.mean(train_residuals),
+                np.std(train_residuals)
+            ],
+            'Validation Set': [
+                np.mean(val_residuals**2),
+                np.mean(np.abs(val_residuals)),
+                np.mean(val_residuals),
+                np.std(val_residuals)
+            ]
+        })
+        comparison_metrics['Difference'] = comparison_metrics['Validation Set'] - comparison_metrics['Training Set']
+        
+        st.dataframe(comparison_metrics.style.format({
+            'Training Set': '{:.4f}',
+            'Validation Set': '{:.4f}',
+            'Difference': '{:.4f}'
+        }), width='stretch')
+
+    with sgtab:# Generate predictions
+        y_train_pred = m.predict(X_train,method="stochastic")
+        y_val_pred = m.predict(X_val,method="stochastic")
+        
+        # Create two columns for train and validation plots
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Training Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_train = go.Figure()
+            
+            # Add scatter points
+            fig_train.add_trace(go.Scatter(
+                x=y_train,
+                y=y_train_pred,
+                mode='markers',
+                name='Training Data',
+                marker=dict(color='blue', size=8, opacity=0.6),
+                text=[f'Actual: {y_train[i]:.2f}<br>Predicted: {y_train_pred[i]:.2f}<br>Error: {y_train[i]-y_train_pred[i]:.2f}' 
+                    for i in range(len(y_train))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_train.min(), y_train_pred.min())
+            max_val = max(y_train.max(), y_train_pred.max())
+            fig_train.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_train.update_layout(
+                title="Training Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_train, width='stretch')
+            
+            # Training set statistics
+            train_residuals = y_train - y_train_pred
+            st.write(f"**Training MSE:** {np.mean(train_residuals**2):.4f}")
+            st.write(f"**Training MAE:** {np.mean(np.abs(train_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(train_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(train_residuals):.4f}")
+        
+        with col2:
+            st.markdown("#### Validation Set")
+            
+            # Scatter plot: Predicted vs Actual
+            fig_val = go.Figure()
+            
+            # Add scatter points
+            fig_val.add_trace(go.Scatter(
+                x=y_val,
+                y=y_val_pred,
+                mode='markers',
+                name='Validation Data',
+                marker=dict(color='green', size=8, opacity=0.6),
+                text=[f'Actual: {y_val[i]:.2f}<br>Predicted: {y_val_pred[i]:.2f}<br>Error: {y_val[i]-y_val_pred[i]:.2f}' 
+                    for i in range(len(y_val))],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+            
+            # Add perfect prediction line (y = x)
+            min_val = min(y_val.min(), y_val_pred.min())
+            max_val = max(y_val.max(), y_val_pred.max())
+            fig_val.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', width=2, dash='dash')
+            ))
+            
+            fig_val.update_layout(
+                title="Validation Set: Predicted vs Actual",
+                xaxis_title="Actual Values",
+                yaxis_title="Predicted Values",
+                template='plotly_white',
+                showlegend=True,
+                height=400
+            )
+            
+            st.plotly_chart(fig_val, width='stretch')
+            
+            # Validation set statistics
+            val_residuals = y_val - y_val_pred
+            st.write(f"**Validation MSE:** {np.mean(val_residuals**2):.4f}")
+            st.write(f"**Validation MAE:** {np.mean(np.abs(val_residuals)):.4f}")
+            st.write(f"**Mean Residual:** {np.mean(val_residuals):.4f}")
+            st.write(f"**Std Residual:** {np.std(val_residuals):.4f}")
+        
+        st.divider()
+        
+        # Combined residual plot
+        st.markdown("#### Residual Analysis")
+        
+        fig_residuals = go.Figure()
+        
+        # Training residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_train,
+            y=train_residuals,
+            mode='markers',
+            name='Training Residuals',
+            marker=dict(color='blue', size=6, opacity=0.6)
+        ))
+        
+        # Validation residuals
+        fig_residuals.add_trace(go.Scatter(
+            x=X_val,
+            y=val_residuals,
+            mode='markers',
+            name='Validation Residuals',
+            marker=dict(color='green', size=6, opacity=0.6)
+        ))
+        
+        # Zero line
+        fig_residuals.add_hline(y=0, line_dash="dash", line_color="red", 
+                                annotation_text="Zero Error Line")
+        
+        fig_residuals.update_layout(
+            title="Residual Plot: Errors vs Input Values",
+            xaxis_title="X (Input Values)",
+            yaxis_title="Residuals (Actual - Predicted)",
+            template='plotly_white',
+            showlegend=True,
+            height=400
+        )
+        
+        st.plotly_chart(fig_residuals, width='stretch')
+        
+        st.markdown("""
+        **Interpretation Guide:**
+        - **Points on red diagonal line** = Perfect predictions (actual = predicted)
+        - **Points above the line** = Model underpredicts (actual > predicted)
+        - **Points below the line** = Model overpredicts (actual < predicted)
+        - **Residuals near zero** = Good predictions
+        - **Random scatter in residuals** = Good model fit (no pattern means no systematic bias)
+        - **Pattern in residuals** = Model is missing something (non-linear relationship, etc.)
+        """)
+        
+        # Statistical comparison
+        st.markdown("#### Train vs Validation Comparison")
+        comparison_metrics = pd.DataFrame({
+            'Metric': ['MSE', 'MAE', 'Mean Residual', 'Std Residual'],
+            'Training Set': [
+                np.mean(train_residuals**2),
+                np.mean(np.abs(train_residuals)),
+                np.mean(train_residuals),
+                np.std(train_residuals)
+            ],
+            'Validation Set': [
+                np.mean(val_residuals**2),
+                np.mean(np.abs(val_residuals)),
+                np.mean(val_residuals),
+                np.std(val_residuals)
+            ]
+        })
+        comparison_metrics['Difference'] = comparison_metrics['Validation Set'] - comparison_metrics['Training Set']
+        
+        st.dataframe(comparison_metrics.style.format({
+            'Training Set': '{:.4f}',
+            'Validation Set': '{:.4f}',
+            'Difference': '{:.4f}'
+        }), width='stretch')
 
 with tab4:
     st.subheader("Parameter Evolution During Training")
@@ -2223,6 +2582,8 @@ with tab4:
 # Model Evaluation
 st.header("4️⃣ Model Evaluation Metrics")
 
+st.header("Batch Metrics")
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("R² Score", f"{metrics['R^2']:.4f}")
@@ -2232,6 +2593,30 @@ with col3:
     st.metric("RMSE", f"{metrics['RMSE']:.4f}")
 with col4:
     st.metric("MAE", f"{metrics['MAE']:.4f}")
+
+st.header("Mini-Batch Metrics")
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("R² Score", f"{mini_batch_metrics['R^2']:.4f}")
+with col2:
+    st.metric("MSE", f"{mini_batch_metrics['MSE']:.4f}")
+with col3:
+    st.metric("RMSE", f"{mini_batch_metrics['RMSE']:.4f}")
+with col4:
+    st.metric("MAE", f"{mini_batch_metrics['MAE']:.4f}")
+
+st.header("Stochastic Metrics")
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("R² Score", f"{stochastic_metrics['R^2']:.4f}")
+with col2:
+    st.metric("MSE", f"{stochastic_metrics['MSE']:.4f}")
+with col3:
+    st.metric("RMSE", f"{stochastic_metrics['RMSE']:.4f}")
+with col4:
+    st.metric("MAE", f"{stochastic_metrics['MAE']:.4f}")
 
 # Interactive predictions
 st.header("5️⃣ Make Predictions")
