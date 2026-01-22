@@ -77,7 +77,7 @@ fig_split.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_split, width='stretch')
+st.plotly_chart(fig_split, width='stretch', key='train_val_split')
 
 st.markdown("""
 **Split Details:**
@@ -135,7 +135,7 @@ fig_initial.update_layout(
     hovermode='closest'
 )
 
-st.plotly_chart(fig_initial, width='stretch')
+st.plotly_chart(fig_initial, width='stretch', key='initial_regression_line')
 
 st.markdown("""
 **Note:** The orange dashed line shows the initial random regression line before any training. 
@@ -1183,7 +1183,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_evolution, width='stretch')
+    st.plotly_chart(fig_grad_evolution, width='stretch', key='gradient_evolution')
     
     st.markdown("""
     **Interpretation:**
@@ -1218,7 +1218,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_mag, width='stretch')
+    st.plotly_chart(fig_grad_mag, width='stretch', key='gradient_magnitude')
     
     # Gradient statistics
     col1, col2, col3, col4 = st.columns(4)
@@ -1266,7 +1266,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_param_change, width='stretch')
+    st.plotly_chart(fig_param_change, width='stretch', key='param_change_magnitude')
     
     st.markdown("""
     **Parameter Change Interpretation:**
@@ -1320,7 +1320,7 @@ with tab6:
         height=400
     )
     
-    st.plotly_chart(fig_grad_loss, width='stretch')
+    st.plotly_chart(fig_grad_loss, width='stretch', key='grad_loss_correlation')
     
     st.markdown("""
     **Key Relationship:**
@@ -1387,7 +1387,7 @@ with tab6:
         showlegend=True
     )
     
-    st.plotly_chart(fig_grad_vector, width='stretch')
+    st.plotly_chart(fig_grad_vector, width='stretch', key='param_space_trajectory')
     
     st.markdown("""
     **Parameter Space Interpretation:**
