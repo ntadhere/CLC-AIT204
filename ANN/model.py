@@ -20,7 +20,7 @@ optimal_data = pd.DataFrame(data=data[optimal_stats])
 score_weights = {
     "net_rating": 0.5,
     "ts_pct": 0.25,
-    "usg_pct": 0.03,
+    "usg_pct": -0.05,
     "ast_pct": 0.15,
     "dreb_pct": 0.1,
     "oreb_pct": 0.05
