@@ -94,6 +94,7 @@ def load_model_and_data():
         'model_metrics.pkl'
     ]
     
+    st.write(cwd)
     missing_files = [f for f in required_files if not os.path.exists(f"ANN\\{f}")]
     
     if missing_files:
