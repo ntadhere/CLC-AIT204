@@ -95,7 +95,7 @@ def load_model_and_data():
     ]
     
     st.write(cwd)
-    all_files = os.listdir(f"cwd/ANN")
+    all_files = os.listdir(f"{cwd}/ANN")
     st.write(all_files)
     missing_files = [f for f in required_files if not os.path.exists(f"{cwd}/ANN/{f}")]
     
