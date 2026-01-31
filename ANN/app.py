@@ -107,14 +107,14 @@ def load_model_and_data():
         return None, None, None, None, None
     
     try:
-        with open('team_quality_model.pkl', 'rb') as f:
+        with open(f'{cwd}team_quality_model.pkl', 'rb') as f:
             model = pickle.load(f)
-        with open('scaler.pkl', 'rb') as f:
+        with open(f'{cwd}scaler.pkl', 'rb') as f:
             scaler = pickle.load(f)
-        with open('feature_columns.pkl', 'rb') as f:
+        with open(f'{cwd}feature_columns.pkl', 'rb') as f:
             feature_columns = pickle.load(f)
-        players_df = pd.read_csv('top_100_players.csv')
-        with open('model_metrics.pkl', 'rb') as f:
+        players_df = pd.read_csv(f'{cwd}top_100_players.csv')
+        with open(f'{cwd}model_metrics.pkl', 'rb') as f:
             metrics = pickle.load(f)
         return model, scaler, feature_columns, players_df, metrics
     except Exception as e:
