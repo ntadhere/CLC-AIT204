@@ -94,7 +94,7 @@ def load_model_and_data():
         'model_metrics.pkl'
     ]
     
-    missing_files = [f for f in required_files if not os.path.exists(f"{cwd}\\ANN\\{f}")]
+    missing_files = [f for f in required_files if not os.path.exists(f"ANN\\{f}")]
     
     if missing_files:
         st.error("Missing Required Files:")
