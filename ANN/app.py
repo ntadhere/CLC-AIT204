@@ -85,7 +85,7 @@ st.markdown("""
 def load_model_and_data():
     """Load the trained model and player data"""
     import os
-    
+    cwd = os.getcwd()
     required_files = [
         'team_quality_model.pkl',
         'scaler.pkl',
@@ -94,7 +94,7 @@ def load_model_and_data():
         'model_metrics.pkl'
     ]
     
-    missing_files = [f for f in required_files if not os.path.exists(f)]
+    missing_files = [f for f in required_files if not os.path.exists(f"{cwd}{f}")]
     
     if missing_files:
         st.error("Missing Required Files:")
