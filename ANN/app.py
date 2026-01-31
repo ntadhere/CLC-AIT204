@@ -85,8 +85,10 @@ st.markdown("""
 def load_model_and_data():
     """Load the trained model and player data"""
     import os
+
     cwd = os.getcwd()
     cwd = f"{cwd}/ANN/"
+    
     required_files = [
         'team_quality_model.pkl',
         'scaler.pkl',
