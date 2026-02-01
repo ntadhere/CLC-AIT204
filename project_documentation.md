@@ -30,7 +30,7 @@ Teams are scored 0.0-1.0 based on criteria met. The neural network learns to pre
 
 ### 2.1 Data Preparation
 
-Selected top 100 NBA players from 2018-2023 based on composite scoring. Ten features were extracted: points, rebounds, assists, net rating, true shooting %, usage %, assist %, defensive rebound %, offensive rebound %, and age. Generated 10,000 random 5-player teams, evaluated each against the seven criteria, and assigned quality scores. Features were normalized using StandardScaler (z = (x-μ)/σ) to ensure equal contribution. Data split: 80% training (8,000 teams), 20% testing (2,000 teams).
+Selected top 100 NBA players from 2018-2023 based on composite scoring. Ten features were extracted: points, rebounds, assists, net rating, true shooting %, usage %, assist %, defensive rebound %, offensive rebound %, and age. Generated 10,000 random 5-player teams, evaluated each against the seven criteria, and assigned quality scores. Features were normalized using StandardScaler (`z = (x - μ) / σ`) to ensure equal contribution. Data split: 80% training (8,000 teams), 20% testing (2,000 teams).
 
 ### 2.2 Neural Network Architecture
 
@@ -50,20 +50,28 @@ Total parameters: ~12,289
 
 Data flows through network layers to produce predictions.
 
-**Mathematical Process:**
-For each layer l:
-```
-z^(l) = W^(l) · a^(l-1) + b^(l)    [linear transformation]
-a^(l) = ReLU(z^(l))                [activation: max(0, z)]
-```
+**Mathematical Process:**  
+For each layer \(l\):
 
-**Example:** Input team features x → Layer 1 (128 neurons) → Layer 2 (64) → Layer 3 (32) → Layer 4 (16) → Output ŷ (predicted quality).
+$$
+z^{(l)} = W^{(l)} \cdot a^{(l-1)} + b^{(l)} \quad \text{[linear transformation]}
+$$
+
+$$
+a^{(l)} = \text{ReLU}(z^{(l)}) \quad \text{[activation: max(0, z)]}
+$$
+
+**Example:** Input team features \(x \rightarrow\) Layer 1 (128 neurons) → Layer 2 (64) → Layer 3 (32) → Layer 4 (16) → Output \(\hat{y}\) (predicted quality).
 
 For first neuron in Layer 1:
-```
-z₁ = 0.42×x₁ + 0.31×x₂ + ... + bias = 0.87
-a₁ = ReLU(0.87) = 0.87
-```
+
+$$
+z_1 = 0.42 \cdot x_1 + 0.31 \cdot x_2 + \dots + \text{bias} = 0.87
+$$
+
+$$
+a_1 = \text{ReLU}(0.87) = 0.87
+$$
 
 This repeats through all layers until final prediction is computed.
 
@@ -72,16 +80,23 @@ This repeats through all layers until final prediction is computed.
 Computes gradients to update weights using chain rule.
 
 **Gradient Flow:**
-```
-∂L/∂W^(l) = ∂L/∂a^(L) × ... × ∂a^(l)/∂z^(l) × ∂z^(l)/∂W^(l)
-```
 
-**Output Layer:** δ^(L) = 2(ŷ - y) [MSE gradient]
+$$
+\partial L / \partial W^{(l)} = \partial L / \partial a^{(L)} \times \dots \times \partial a^{(l)} / \partial z^{(l)} \times \partial z^{(l)} / \partial W^{(l)}
+$$
 
-**Hidden Layers:** δ^(l) = (W^(l+1))ᵀ · δ^(l+1) ⊙ ReLU'(z^(l))
+**Output Layer:**  
+$$
+\delta^{(L)} = 2 (\hat{y} - y) \quad \text{[MSE gradient]}
+$$
 
-**Example:** For prediction ŷ=0.75, actual y=0.85:
-- Output gradient: δ = 2(0.75-0.85) = -0.20
+**Hidden Layers:**  
+$$
+\delta^{(l)} = (W^{(l+1)})^T \cdot \delta^{(l+1)} \odot \text{ReLU}'(z^{(l)})
+$$
+
+**Example:** For prediction \(\hat{y}=0.75\), actual \(y=0.85\):
+- Output gradient: \(\delta = 2 \cdot (0.75 - 0.85) = -0.20\)
 - Propagates backward through all layers
 - Each weight learns its contribution to error
 
@@ -90,16 +105,23 @@ Gradients enable weight updates via Adam optimizer.
 ### 2.5 Optimization: Adam Algorithm
 
 **Update Rule:**
-```
-m_t = β₁·m_(t-1) + (1-β₁)·g_t           [momentum]
-v_t = β₂·v_(t-1) + (1-β₂)·g_t²          [RMSprop]
-W_t = W_(t-1) - α·m̂_t/(√v̂_t + ε)      [weight update]
-```
 
-**Hyperparameters:** α=0.001, β₁=0.9, β₂=0.999
+$$
+m_t = \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t \quad \text{[momentum]}
+$$
+
+$$
+v_t = \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2 \quad \text{[RMSprop]}
+$$
+
+$$
+W_t = W_{t-1} - \alpha \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon) \quad \text{[weight update]}
+$$
+
+**Hyperparameters:** \(\alpha=0.001, \beta_1=0.9, \beta_2=0.999\)
 
 **Regularization:**
-- L2 penalty (α=0.001) prevents large weights
+- L2 penalty (\(\alpha=0.001\)) prevents large weights
 - Early stopping (patience=15) prevents overfitting
 
 **Training:** Batch size 32, max 500 iterations. Model trained for 84 iterations before early stopping triggered, achieving final loss of 0.00353.
@@ -111,9 +133,9 @@ W_t = W_(t-1) - α·m̂_t/(√v̂_t + ε)      [weight update]
 ### 3.1 Model Performance
 
 **Metrics:**
-- Test R² = 0.727 (explains 72.7% of variance)
+- Test \(R^2 = 0.727\) (explains 72.7% of variance)
 - Test MAE = 0.068 (±6.8% average error)
-- Training R² = 0.777 (minimal overfitting: 5% difference)
+- Training \(R^2 = 0.777\) (minimal overfitting: 5% difference)
 - Training time: <2 minutes, 84 iterations
 
 **Interpretation:** Model achieves excellent accuracy for sports analytics. Predictions typically within ±0.07 of actual quality. Low overfitting indicates good generalization. Comparison: random teams average 0.712 quality; model's top 10 teams average 0.925 (30% improvement).
