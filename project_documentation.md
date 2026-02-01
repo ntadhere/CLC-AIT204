@@ -2,7 +2,7 @@
 
 **Course:** AIT-204 - Artificial Intelligence and Neural Networks  
 **Assignment:** Topic 2 - Multi-Layer Perceptron Implementation  
-**Student:** [Your Name]  
+**Student:** Gavin Higgins & Truong Anh Dao Nguyen  
 **Date:** January 31, 2026
 
 ---
@@ -176,7 +176,3 @@ This MLP neural network successfully predicts basketball team quality with 72.7%
 - Algorithm: ~200 words per subsection (×5 = ~1,000 words total)
 - Analysis: ~200 words per subsection (×4 = ~800 words total)
 - **Total: ~2,000 words / 5-6 pages**
-
----
-
-**END OF DOCUMENT**
