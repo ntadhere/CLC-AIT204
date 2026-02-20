@@ -198,12 +198,15 @@ class Vocabulary:
         # Build reverse mapping
         # TODO 7: Create idx2word by inverting word2idx
         # HINT: dict comprehension {idx: word for word, idx in ...}
-        self.idx2word = {idx: word for word, idx in self.word2idx}
+        self.idx2word = {idx: word for word, idx in self.word2idx.items()}
 
     def encode(self, tokens):
         """Convert tokens to integer IDs. Unknown words become <UNK>."""
         # TODO 8: Return list of IDs using word2idx.get(token, self.unk_idx)
-        return ___
+        int_ids = []
+        for token in tokens:
+            int_ids.append(self.word2idx.get(token, self.unk_idx))
+        return int_ids
 
     def decode(self, indices):
         """Convert integer IDs back to words."""
@@ -264,9 +267,9 @@ def pad_sequence(encoded, max_length, pad_value=0):
     # If len(encoded) >= max_length: return encoded[:max_length]
     # Else: return encoded + [pad_value] * (max_length - len(encoded))
     if len(encoded) >= max_length:
-        return ___
+        return encoded[:max_length]
     else:
-        return ___
+        return encoded + [pad_value] * (max_length - len(encoded))
 
 
 # =========================================================================
