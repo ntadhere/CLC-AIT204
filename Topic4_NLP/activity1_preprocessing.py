@@ -193,7 +193,7 @@ class Vocabulary:
         #       assign the word the next available index: len(self.word2idx)
         for word, count in self.word_counts.items():
             if count >= self.min_freq:
-                self.word2idx[word] = count
+                self.word2idx[word] = len(self.word2idx)
 
         # Build reverse mapping
         # TODO 7: Create idx2word by inverting word2idx
