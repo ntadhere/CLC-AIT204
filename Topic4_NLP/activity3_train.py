@@ -44,6 +44,7 @@ RUN THIS FILE: python activity3_train.py
 """
 
 import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -248,12 +249,12 @@ print(f"\nModel: {sum(p.numel() for p in model.parameters()):,} parameters")
 # TODO 1: Create the loss function
 # For binary classification (positive/negative), use Binary Cross-Entropy.
 # HINT: criterion = nn.BCELoss()
-criterion = ___
+criterion = nn.BCELoss()
 
 # TODO 2: Create the optimizer
 # Adam is an improved version of gradient descent from Topic 1.
 # HINT: optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-optimizer = ___
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 
 # =========================================================================
@@ -283,25 +284,25 @@ for epoch in range(NUM_EPOCHS):
 
         # Step A: Zero the gradients from the previous iteration
         # HINT: optimizer.zero_grad()
-        ___
+        optimizer.zero_grad()
 
         # Step B: Forward pass — get predictions
         # HINT: predictions = model(batch_X).squeeze(1)
         # (.squeeze(1) removes extra dim: (batch, 1) -> (batch,))
-        predictions = ___
+        predictions = model(batch_X).squeeze(1)
 
         # Step C: Compute loss
         # HINT: loss = criterion(predictions, batch_y.float())
         # Note: BCELoss needs float labels, not int
-        loss = ___
+        loss = criterion(predictions, batch_y.float())
 
         # Step D: Backward pass — compute gradients
         # HINT: loss.backward()
-        ___
+        loss.backward()
 
         # Step E: Update weights using gradients
         # HINT: optimizer.step()
-        ___
+        optimizer.step()
 
         # Track metrics (provided)
         epoch_loss += loss.item() * len(batch_y)
