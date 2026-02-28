@@ -39,7 +39,7 @@ Every Activity 4 app follows this two-layer architecture:
 ┌─────────────────────────────────────────────────────────────────────┐
 │  FRONTEND  ─  activity4_app.py  (Streamlit)                         │
 │                                                                     │
-│   st.title()   st.text_area()   st.button()   st.metric()          │
+│   st.title()   st.text_area()   st.button()   st.metric()           │
 │   Creates web pages. Handles user input. Calls service methods.     │
 │   Formats returned dicts as visual components. Zero model code.     │
 ├─────────────────────────────────────────────────────────────────────┤
