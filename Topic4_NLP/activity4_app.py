@@ -304,20 +304,20 @@ with tab2:
             # Replace this placeholder with your Streamlit display code.
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Sentiment", result["sentiment"])
+                st.metric("Sentiment", result['translated']['sentiment'])
             with col2:
-                st.metric("Confidence", f"{result['confidence']:.1%}")
+                st.metric("Confidence", f"{result['translated']['confidence']:.1%}")
         
-            st.progress(result["positive_score"],
-                        text=f"Positive score: {result['positive_score']:.3f}")
+            st.progress(result['translated']["positive_score"],
+                        text=f"Positive score: {result['translated']['positive_score']:.3f}")
         
             with st.expander("Preprocessing Pipeline"):
-                st.write("**Cleaned:**",     result["cleaned"])
-                st.write("**Tokens:**",      result["tokens"])
-                st.write("**Encoded IDs:**", result["encoded"])
+                st.write("**Cleaned:**",     result['translated']["cleaned"])
+                st.write("**Tokens:**",      result['translated']["tokens"])
+                st.write("**Encoded IDs:**", result['translated']["encoded"])
                 st.caption(
                     f"Vocabulary coverage: "
-                    f"{result['known_count']}/{len(result['tokens'])} tokens known"
+                    f"{result['translated']['known_count']}/{len(result['translated']['tokens'])} tokens known"
                 )
 
 
