@@ -15,6 +15,7 @@
  * would be loaded from a database or model-storage service.
  */
 import { NextRequest, NextResponse } from "next/server";
+import ModelWeights from "./weights.json"
 
 // ── Dataset normalisation constants (from training) ────────────────────────
 const T_MIN = -23.01;
@@ -53,11 +54,19 @@ function seededBias(size: number): number[] {
 // ── Model weights (initialised deterministically; fine-tuned via training) ─
 // NOTE: In a production deployment, replace these with your actual saved
 //       weight arrays from the Python training run.
+/*
 const W_xh: number[][] = seededWeights(1,           HIDDEN_SIZE, 42);
 const W_hh: number[][] = seededWeights(HIDDEN_SIZE, HIDDEN_SIZE, 137);
 const b_h:  number[]   = seededBias(HIDDEN_SIZE);
 const W_hy: number[][] = seededWeights(HIDDEN_SIZE, 1,           23);
 const b_y:  number[]   = seededBias(1);
+ */
+
+const W_xh: number[][] = ModelWeights.W_xh;
+const W_hh: number[][] = ModelWeights.W_hh;
+const b_h:  number[] = ModelWeights.b_h;
+const W_hy: number[][] = ModelWeights.W_hy;
+const b_y:  number[] = ModelWeights.b_y;
 
 // ── Matrix × vector ──────────────────────────────────────────────────────
 function matVecMul(mat: number[][], vec: number[]): number[] {

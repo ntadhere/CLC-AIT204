@@ -5,6 +5,7 @@
   Model   : Vanilla RNN (NumPy), trained with Truncated BPTT + Adam
 =======================================================================
 """
+import json
 
 import numpy as np
 import pandas as pd
@@ -27,12 +28,13 @@ TRAIN_RATIO   = 0.8    # 80 % train / 20 % test (chronological split)
 SAMPLE_STEP   = 10     # Use every 10th sequence to keep memory manageable
 SEED          = 42
 
-DATASET_PATH  = ('/sessions/fervent-gracious-shannon/mnt/claude/'
-                 'ait-204/rnn/dataset/jena_climate_2009_2016.csv')
-SAVE_DIR      = '/sessions/fervent-gracious-shannon/mnt/claude/ait-204/rnn'
+cwd = os.getcwd()
+DATASET_PATH  = (f'{cwd}/dataset/jena_climate_2009_2016.csv')
+SAVE_DIR      = f'{cwd}'
 
 np.random.seed(SEED)
-os.makedirs(SAVE_DIR, exist_ok=True)
+if not os.path.exists(SAVE_DIR):
+    os.makedirs(SAVE_DIR, exist_ok=True)
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -322,7 +324,6 @@ class VanillaRNN:
             preds.append(y_pred)
         return np.vstack(preds)
 
-
 # ══════════════════════════════════════════════════════════════════════
 #  5. Instantiate & Train
 # ══════════════════════════════════════════════════════════════════════
@@ -359,9 +360,22 @@ for epoch in range(1, EPOCHS + 1):
     if epoch == 1 or epoch % 5 == 0:
         print(f"    {epoch:>6}  {loss:>12.6f}  {elapsed:>10.2f}s")
 
+
 total_time = time.time() - t_start
 print(f"\n    Total training time : {total_time:.1f}s")
 
+# Save model weights
+weights = {
+    "W_xh": model.W_xh.tolist(),
+    "W_hh": model.W_hh.tolist(),
+    "b_h": model.b_h.flatten().tolist(),
+    "W_hy": model.W_hy.tolist(),
+    "b_y": model.b_y.flatten().tolist()
+}
+
+weights_json = json.dumps(weights)
+with(open("rnn-app/app/api/predict/weights.json", "w")) as f:
+    f.write(weights_json)
 
 # ══════════════════════════════════════════════════════════════════════
 #  6. Evaluation
